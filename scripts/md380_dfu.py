@@ -235,7 +235,7 @@ radio will be radio to accept this firmware update.""")
         block_start = 2
         address_idx = 0
 
-        if data[0:14] == "OutSecurityBin":  # skip header if present
+        if data[0:14] == b"OutSecurityBin":  # skip header if present
             if dfu.verbose:
                 print("Skipping 0x100 byte header in data file")
             header, data = data[:0x100], data[0x100:]

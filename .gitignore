@@ -36,3 +36,6 @@
 *.elf
 *.hex
 *.map
+
+# Python byte-compiled
+*/__pycache__
