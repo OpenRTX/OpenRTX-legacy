@@ -109,7 +109,9 @@ AS  := arm-none-eabi-as
 CP  := arm-none-eabi-objcopy
 SZ  := arm-none-eabi-size
 
-all: main.elf
+all: main.bin
+
+main.bin: main.elf
 	$(ECHO) "[CP  ] main.hex"
 	$(Q)$(CP) -O ihex   main.elf main.hex
 	$(ECHO) "[CP  ] main.bin"
@@ -132,8 +134,16 @@ main.elf: $(OBJ) #all-recursive
 	$(ECHO) "[CXX ] $<"
 	$(Q)$(CXX) $(DFLAGS) $(CXXFLAGS) $< -o $@
 
+flash: main_wrapped.bin
+	$(ECHO) "[DFU ] $<"
+	$(Q)./scripts/md380_dfu.py upgrade $<
+
+main_wrapped.bin: main.bin
+	$(ECHO) "[WRAP] $<"
+	$(Q)./scripts/md380_fw.py --wrap $< $@
+
 clean:
-	-rm -f $(OBJ) main.elf main.hex main.bin main.map $(OBJ:.o=.d)
+	-rm -f $(OBJ) main.elf main.hex main.bin main.map main_wrapped.bin $(OBJ:.o=.d)
 
 #pull in dependecy info for existing .o files
 -include $(OBJ:.o=.d)
