@@ -45,6 +45,6 @@ OpenDMR was created by:
 - Silvano Seva IU2KWO <silseva@fastwebnet.it>
 
 All this was made possible by the huge reverse engineering effort of
-Travis Goodspeed and all the contributors of (md380tools)[https://github.com/travisgoodspeed/md380tools].
-A huge thank goes to Roger Clark, and his (OpenGD77)[https://github.com/rogerclarkmelbourne/OpenGD77] which inspired this project,
+Travis Goodspeed and all the contributors of [md380tools](https://github.com/travisgoodspeed/md380tools).
+A huge thank goes to Roger Clark, and his [OpenGD77](https://github.com/rogerclarkmelbourne/OpenGD77) which inspired this project,
 and which we aspire becoming a part of.
