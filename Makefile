@@ -51,7 +51,7 @@ TARGET := -DSTM32F40_41xxx
 ## System clock frequency, in hertz. Must be defined and set to correct value
 ## in order to make drivers working correctly
 ##
-CLK_FREQ :=
+CLK_FREQ := -DHSE_VALUE=8000000
 
 ##
 ## Optimization level
