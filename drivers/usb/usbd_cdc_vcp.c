@@ -16,36 +16,46 @@
   *
   *        http://www.st.com/software_license_agreement_liberty_v2
   *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
+  * Unless required by applicable law or agreed to in writing, software 
+  * distributed under the License is distributed on an "AS IS" BASIS, 
   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   * See the License for the specific language governing permissions and
   * limitations under the License.
   *
   ******************************************************************************
-  */
+  */ 
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_vcp.h"
 #include "usb_conf.h"
 
-#include <FreeRTOS.h>
-#include <queue.h>
-#include <task.h>
+#include "usb_core.h"
+#include "usbd_core.h"
+
+#include "usbd_cdc_core.h"
+
+#include "usb_vcp.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+/* Private function prototypes -----------------------------------------------*/
+extern USB_OTG_CORE_HANDLE           USB_OTG_dev;
 
-static LINE_CODING linecoding = {
-  115200, /* baud rate*/
-  0x00,   /* stop bits-1*/
-  0x00,   /* parity - none*/
-  0x08    /* nb. of bits 8*/
+/* Private typedef -----------------------------------------------------------*/
+/* Private define ------------------------------------------------------------*/
+/* Private macro -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
+LINE_CODING linecoding = {
+	115200, /* baud rate */
+	0x00,   /* stop bits-1 */
+	0x00,   /* parity - none */
+	0x08,   /* nb. of bits 8 */
+	1		/* Changed flag */
 };
 
-/* These are external variables imported from CDC core to be used for IN
+/* These are external variables imported from CDC core to be used for IN 
    transfer management. */
 extern uint8_t  APP_Rx_Buffer []; /* Write CDC received data in this buffer.
                                      These data will be sent over USB IN endpoint
@@ -54,36 +64,29 @@ extern uint32_t APP_Rx_ptr_in;    /* Increment this pointer or roll it back to
                                      start address when writing received data
                                      in the buffer APP_Rx_Buffer. */
 
-/** Size in bytes of the receive queue. */
-#define RX_QUEUE_LEN 128
-
-/** Receive buffer read by "VCP_Read". */
-xQueueHandle g_rx_queue;
-
 /* Private function prototypes -----------------------------------------------*/
-static uint16_t VCP_DriverInit (void);
-static uint16_t VCP_DeInit     (void);
-static uint16_t VCP_Ctrl       (uint32_t Cmd, uint8_t* Buf, uint32_t Len);
-static uint16_t VCP_DataRx     (uint8_t* Buf, uint32_t Len);
+static uint16_t VCP_Init     (void);
+static uint16_t VCP_DeInit   (void);
+static uint16_t VCP_Ctrl     (uint32_t Cmd, uint8_t* Buf, uint32_t Len);
+//static uint16_t VCP_COMConfig(uint8_t Conf);
 
-CDC_IF_Prop_TypeDef VCP_fops =
+CDC_IF_Prop_TypeDef VCP_fops = 
 {
-  VCP_DriverInit,
+  VCP_Init,
   VCP_DeInit,
   VCP_Ctrl,
-  VCP_Write,
+  VCP_DataTx,
   VCP_DataRx
 };
 
 /* Private functions ---------------------------------------------------------*/
 /**
-  * @brief  VCP_DriverInit
+  * @brief  VCP_Init
   *         Initializes the Media on the STM32
   * @param  None
   * @retval Result of the opeartion (USBD_OK in all cases)
   */
-static uint16_t VCP_DriverInit(void)
-{
+static uint16_t VCP_Init(void) {
   return USBD_OK;
 }
 
@@ -93,8 +96,7 @@ static uint16_t VCP_DriverInit(void)
   * @param  None
   * @retval Result of the opeartion (USBD_OK in all cases)
   */
-static uint16_t VCP_DeInit(void)
-{
+static uint16_t VCP_DeInit(void) {
   return USBD_OK;
 }
 
@@ -102,13 +104,20 @@ static uint16_t VCP_DeInit(void)
 /**
   * @brief  VCP_Ctrl
   *         Manage the CDC class requests
-  * @param  Cmd: Command code
+  * @param  Cmd: Command code            
   * @param  Buf: Buffer containing command data (request parameters)
   * @param  Len: Number of data to be sent (in bytes)
   * @retval Result of the opeartion (USBD_OK in all cases)
   */
 static uint16_t VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
-{
+{ /*
+	int i;
+	printf("Command: 0x%02X: ", Cmd);
+	for (i = 0; i < Len; i++) {
+		printf("0x%02X ", Buf[i]);
+	}
+	printf("\n");
+	*/
   switch (Cmd)
   {
   case SEND_ENCAPSULATED_COMMAND:
@@ -136,8 +145,9 @@ static uint16_t VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
     linecoding.format = Buf[4];
     linecoding.paritytype = Buf[5];
     linecoding.datatype = Buf[6];
-    /* Set the new configuration */
-    // VCP_COMConfig(OTHER_CONFIG);
+	linecoding.changed = 1;
+  
+    //VCP_COMConfig(OTHER_CONFIG);
     break;
 
   case GET_LINE_CODING:
@@ -147,17 +157,18 @@ static uint16_t VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
     Buf[3] = (uint8_t)(linecoding.bitrate >> 24);
     Buf[4] = linecoding.format;
     Buf[5] = linecoding.paritytype;
-    Buf[6] = linecoding.datatype;
+    Buf[6] = linecoding.datatype; 
     break;
 
   case SET_CONTROL_LINE_STATE:
+	//printf("Set control line state\n");
     /* Not  needed for this driver */
     break;
 
   case SEND_BREAK:
     /* Not  needed for this driver */
-    break;
-
+    break;    
+    
   default:
     break;
   }
@@ -166,69 +177,53 @@ static uint16_t VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
 }
 
 /**
-  * @brief  VCP_Write
-  *         CDC received data to be send over USB IN endpoint are managed in
+  * @brief  VCP_DataTx
+  *         CDC received data to be send over USB IN endpoint are managed in 
   *         this function.
   * @param  Buf: Buffer of data to be sent
   * @param  Len: Number of data to be sent (in bytes)
   * @retval Result of the opeartion: USBD_OK if all operations are OK else VCP_FAIL
   */
-uint16_t VCP_Write (uint8_t* buf, uint32_t len)
-{
-  /* XXX what happens if len > APP_RX_DATA_SIZE? */
-  for (uint32_t i = 0; i < len; ++i) {
-    APP_Rx_Buffer[APP_Rx_ptr_in++] = buf[i];
-
-    if (APP_Rx_ptr_in == APP_RX_DATA_SIZE)
-      APP_Rx_ptr_in = 0;
-  }
-
-  return USBD_OK;
+uint16_t VCP_DataTx (uint8_t* Buf, uint32_t Len) {
+	uint32_t tx_counter = 0;
+	
+	while (tx_counter < Len) {
+		APP_Rx_Buffer[APP_Rx_ptr_in] = *(Buf+tx_counter);
+		
+		APP_Rx_ptr_in++;
+		
+		/* To avoid buffer overflow */
+		if (APP_Rx_ptr_in >= APP_RX_DATA_SIZE) {
+			APP_Rx_ptr_in = 0;
+		}
+		
+		tx_counter++;
+	}
+	
+	return USBD_OK;
 }
 
 /**
   * @brief  VCP_DataRx
-  *         Data received over USB OUT endpoint are sent over CDC interface
+  *         Data received over USB OUT endpoint are sent over CDC interface 
   *         through this function.
-  *
+  *           
   *         @note
-  *         This function will block any OUT packet reception on USB endpoint
+  *         This function will block any OUT packet reception on USB endpoint 
   *         untill exiting this function. If you exit this function before transfer
-  *         is complete on CDC interface (ie. using DMA controller) it will result
+  *         is complete on CDC interface (ie. using DMA controller) it will result 
   *         in receiving more data while previous ones are still not sent.
-  *
+  *                 
   * @param  Buf: Buffer of data to be received
   * @param  Len: Number of data received (in bytes)
   * @retval Result of the opeartion: USBD_OK if all operations are OK else VCP_FAIL
   */
-static uint16_t VCP_DataRx (uint8_t* buf, uint32_t len)
-{
-  portBASE_TYPE should_yield = pdFALSE;
-
-  for (uint32_t i = 0; i < len; ++i) {
-    if (!xQueueSendFromISR(g_rx_queue, &buf[i], &should_yield))
-      break;
-  }
-
-  portEND_SWITCHING_ISR(should_yield);
-  return USBD_OK;
+uint16_t VCP_DataRx (uint8_t* Buf, uint32_t Len) {
+	uint32_t i;
+	for (i = 0; i < Len; i++) {
+		/* Add data to internal buffer */
+		TM_INT_USB_VCP_AddReceived(*(Buf + i));
+	}
+	
+	return USBD_OK;
 }
-
-void VCP_Init(void)
-{
-  g_rx_queue = xQueueCreate(RX_QUEUE_LEN, 1);
-}
-
-int32_t VCP_Read(uint8_t *buf, uint32_t len, portTickType timeout)
-{
-  int32_t i;
-
-  for (i = 0; i < len; ++i, ++buf) {
-    if (!xQueueReceive(g_rx_queue, buf, timeout))
-      break;
-  }
-
-  return i;
-}
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

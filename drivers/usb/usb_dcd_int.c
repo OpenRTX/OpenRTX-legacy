@@ -27,14 +27,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usb_dcd_int.h"
-
-/* This file contains a few spots that break GCC's strict aliasing rules.
- * We trust code the code to be correct on blind faith in ST. (This faith is likely
- * misplaced given some egregious mistakes we've discovered in ST code before, but...)
- * - pch 21 june 2013
- */
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
 /** @addtogroup USB_OTG_DRIVER
 * @{
 */
@@ -682,11 +674,6 @@ static uint32_t DCD_WriteEmptyTxFifo(USB_OTG_CORE_HANDLE *pdev, uint32_t epnum)
     
     ep->xfer_buff  += len;
     ep->xfer_count += len;
-
-    if (ep->xfer_count >= ep->xfer_len) {
-      uint32_t mask = 1 << ep->num;
-      USB_OTG_MODIFY_REG32(&pdev->regs.DREGS->DIEPEMPMSK, mask, 0);
-    }
     
     txstatus.d32 = USB_OTG_READ_REG32(&pdev->regs.INEP_REGS[epnum]->DTXFSTS);
   }

@@ -31,6 +31,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_core.h"
+#include "usb_vcp.h"
 
 
 /** @addtogroup USBD_USER
@@ -108,6 +109,8 @@ void     USBD_USR_HS_DeviceResumed(void);
 
 void     USBD_USR_HS_DeviceConnected(void);
 void     USBD_USR_HS_DeviceDisconnected(void);  
+
+extern TM_USB_VCP_Result USBD_User_GetStatus(void);
 
 /**
   * @}

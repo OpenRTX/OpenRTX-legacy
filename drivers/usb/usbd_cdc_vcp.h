@@ -30,16 +30,12 @@
 #define __USBD_CDC_VCP_H
 
 /* Includes ------------------------------------------------------------------*/
-#ifdef STM32F2XX
- #include "stm32f2xx.h"
-#elif defined(STM32F10X_CL)
- #include "stm32f10x.h"
-#endif /* STM32F2XX */
 
 #include "usbd_cdc_core.h"
 #include "usbd_conf.h"
 
-#include <FreeRTOS.h>
+uint16_t VCP_DataTx   (uint8_t* Buf, uint32_t Len);
+uint16_t VCP_DataRx   (uint8_t* Buf, uint32_t Len);
 
 /* Exported typef ------------------------------------------------------------*/
 /* The following structures groups all needed parameters to be configured for the 
@@ -51,17 +47,8 @@ typedef struct
   uint8_t  format;
   uint8_t  paritytype;
   uint8_t  datatype;
-} LINE_CODING;
-
-/* Exported constants --------------------------------------------------------*/
-/* The following define is used to route the USART IRQ handler to be used.
-   The IRQ handler function is implemented in the usbd_cdc_vcp.c file. */
-          
-#ifdef USE_STM3210C_EVAL
- #define EVAL_COM_IRQHandler            USART2_IRQHandler
-#else
- #define EVAL_COM_IRQHandler            USART3_IRQHandler  
-#endif /* USE_STM322xG_EVAL */
+	uint8_t changed;
+}LINE_CODING;
 
 
 #define DEFAULT_CONFIG                  0
@@ -69,15 +56,6 @@ typedef struct
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-
-/** Initialize the VCP driver.  Call this before initializing USB. */
-void VCP_Init(void);
-
-/** Write data to the VCP. */
-uint16_t VCP_Write(uint8_t *buf, uint32_t len);
-
-/** Read data from the VCP receive queue. */
-int32_t VCP_Read(uint8_t *buf, uint32_t len, portTickType timeout);
 
 #endif /* __USBD_CDC_VCP_H */
 

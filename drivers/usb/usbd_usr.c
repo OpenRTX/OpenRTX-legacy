@@ -29,42 +29,11 @@
 #include "usbd_usr.h"
 #include "usbd_ioreq.h"
 
-/** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
-* @{
-*/
+#include "usb_vcp.h"
 
-/** @defgroup USBD_USR 
-* @brief    This file includes the user application layer
-* @{
-*/ 
+#include <stdio.h>
 
-/** @defgroup USBD_USR_Private_TypesDefinitions
-* @{
-*/ 
-/**
-* @}
-*/ 
-
-
-/** @defgroup USBD_USR_Private_Defines
-* @{
-*/ 
-/**
-* @}
-*/ 
-
-
-/** @defgroup USBD_USR_Private_Macros
-* @{
-*/ 
-/**
-* @}
-*/ 
-
-
-/** @defgroup USBD_USR_Private_Variables
-* @{
-*/ 
+TM_USB_VCP_Result TM_USB_VCP_INT_Status = TM_USB_VCP_NOT_CONNECTED;
 
 USBD_Usr_cb_TypeDef USR_cb =
 {
@@ -73,113 +42,42 @@ USBD_Usr_cb_TypeDef USR_cb =
   USBD_USR_DeviceConfigured,
   USBD_USR_DeviceSuspended,
   USBD_USR_DeviceResumed,
-  
-  
   USBD_USR_DeviceConnected,
   USBD_USR_DeviceDisconnected,    
 };
 
-/**
-* @}
-*/
-
-/** @defgroup USBD_USR_Private_Constants
-* @{
-*/ 
-
-/**
-* @}
-*/
-
-
-
-/** @defgroup USBD_USR_Private_FunctionPrototypes
-* @{
-*/ 
-/**
-* @}
-*/ 
-
-
-/** @defgroup USBD_USR_Private_Functions
-* @{
-*/ 
-
-/**
-* @brief  USBD_USR_Init 
-*         Displays the message on LCD for host lib initialization
-* @param  None
-* @retval None
-*/
-void USBD_USR_Init(void)
-{  
+void USBD_USR_Init(void) {
+	TM_USB_VCP_INT_Status = TM_USB_VCP_NOT_CONNECTED;
 }
 
-/**
-* @brief  USBD_USR_DeviceReset 
-*         Displays the message on LCD on device Reset Event
-* @param  speed : device speed
-* @retval None
-*/
-void USBD_USR_DeviceReset(uint8_t speed )
-{
+void USBD_USR_DeviceReset(uint8_t speed ) {
+	TM_USB_VCP_INT_Status = TM_USB_VCP_NOT_CONNECTED;
 }
 
-
-/**
-* @brief  USBD_USR_DeviceConfigured
-*         Displays the message on LCD on device configuration Event
-* @param  None
-* @retval Staus
-*/
-void USBD_USR_DeviceConfigured (void)
-{
+void USBD_USR_DeviceConfigured (void) {
+	TM_USB_VCP_INT_Status = TM_USB_VCP_CONNECTED;
 }
 
-/**
-* @brief  USBD_USR_DeviceSuspended 
-*         Displays the message on LCD on device suspend Event
-* @param  None
-* @retval None
-*/
-void USBD_USR_DeviceSuspended(void)
-{
-  /* Users can do their application actions here for the USB-Reset */
+void USBD_USR_DeviceSuspended(void) {
+	TM_USB_VCP_INT_Status = TM_USB_VCP_NOT_CONNECTED;
 }
 
-
-/**
-* @brief  USBD_USR_DeviceResumed 
-*         Displays the message on LCD on device resume Event
-* @param  None
-* @retval None
-*/
-void USBD_USR_DeviceResumed(void)
-{
-  /* Users can do their application actions here for the USB-Reset */
+void USBD_USR_DeviceResumed(void) {
+	TM_USB_VCP_INT_Status = TM_USB_VCP_NOT_CONNECTED;
 }
 
-
-/**
-* @brief  USBD_USR_DeviceConnected
-*         Displays the message on LCD on device connection Event
-* @param  None
-* @retval Staus
-*/
-void USBD_USR_DeviceConnected (void)
-{
+void USBD_USR_DeviceConnected (void) {
+	TM_USB_VCP_INT_Status = TM_USB_VCP_NOT_CONNECTED;
 }
 
-
-/**
-* @brief  USBD_USR_DeviceDisonnected
-*         Displays the message on LCD on device disconnection Event
-* @param  None
-* @retval Staus
-*/
-void USBD_USR_DeviceDisconnected (void)
-{
+void USBD_USR_DeviceDisconnected (void) {
+	TM_USB_VCP_INT_Status = TM_USB_VCP_NOT_CONNECTED;
 }
+
+TM_USB_VCP_Result USBD_User_GetStatus(void) {
+	return TM_USB_VCP_INT_Status;
+}
+
 /**
 * @}
 */ 

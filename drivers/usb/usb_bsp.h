@@ -62,7 +62,6 @@
 /** @defgroup USB_BSP_Exported_Macros
   * @{
   */ 
-
 /**
   * @}
   */ 
@@ -77,6 +76,7 @@
 /** @defgroup USB_BSP_Exported_FunctionsPrototype
   * @{
   */ 
+void BSP_Init(void);
 
 void USB_OTG_BSP_Init (USB_OTG_CORE_HANDLE *pdev);
 void USB_OTG_BSP_uDelay (const uint32_t usec);

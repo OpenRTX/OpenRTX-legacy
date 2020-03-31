@@ -20,7 +20,11 @@ drivers/usb/usbd_desc.c     \
 drivers/usb/usbd_ioreq.c    \
 drivers/usb/usbd_req.c      \
 drivers/usb/usbd_usr.c      \
-drivers/usb_cdc.c
+drivers/stm32f4xx_exti.c    \
+drivers/stm32f4xx_gpio.c    \
+drivers/stm32f4xx_rcc.c     \
+drivers/usb_vcp.c           \
+drivers/misc.c
 
 
 ##
