@@ -54,7 +54,8 @@ void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *usb_dev)
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
     GPIOA->MODER   |= (0x02 << 2*11)   | (0x02 << 2*12);  // Alternate mode
     GPIOA->AFR[1]  |= (0x0A << 4*3)    | (0x0A << 4*4);   // AF10
-    GPIOA->PUPDR   &= ~((0x03 << 2*11) | (0x03 << 2*12)); // No pull-up/pull-down
+    GPIOA->PUPDR   = 0x64000000;                          // Reset to default state
+    GPIOA->PUPDR   |= (1 << 12);                          // Pull-up on USB D+
     GPIOA->OSPEEDR |= (0x03 << 2*11)   | (0x03 << 2*12);  // High speed
 
     RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
