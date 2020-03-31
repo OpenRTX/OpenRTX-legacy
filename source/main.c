@@ -4,7 +4,7 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "task.h"
-#include "stm32f405xx.h"
+#include "stm32f4xx.h"
 
 static void sleep(uint32_t);
 

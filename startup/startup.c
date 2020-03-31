@@ -28,7 +28,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "stm32f405xx.h"
+#include "stm32f4xx.h"
 
 ///< Entry point for application code
 int main(int argc, char *argv[]);

@@ -23,12 +23,12 @@ INCLUDE_DIRS :=
 ##
 ## List here additional defines
 ##
-DEFINES := 
+DEFINES :=
 
 ##
 ## Define used to select target processor
 ##
-TARGET :=
+TARGET := -DSTM32F40_41xxx
 
 ##
 ## System clock frequency, in hertz. Must be defined and set to correct value
