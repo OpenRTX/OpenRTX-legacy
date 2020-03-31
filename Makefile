@@ -7,19 +7,21 @@ SRC := source/usb_test.c
 ##
 ## Drivers' source files and include directories
 ##
-DRIVERS_INC := -Idrivers/usb
+DRIVERS_INC := -Idrivers -Idrivers/usb
 DRIVERS_SRC := \
 drivers/usb/usb_bsp.c       \
 drivers/usb/usb_core.c      \
 drivers/usb/usb_dcd.c       \
+drivers/usb/usbd_cdc_core.c \
 drivers/usb/usbd_cdc_vcp.c  \
 drivers/usb/usb_dcd_int.c   \
-drivers/usb/usbd_desc.c     \
-drivers/usb/usbd_usr.c      \
-drivers/usb/usbd_ioreq.c    \
 drivers/usb/usbd_core.c     \
+drivers/usb/usbd_desc.c     \
+drivers/usb/usbd_ioreq.c    \
 drivers/usb/usbd_req.c      \
-drivers/usb/stm32f4xx_rcc.h
+drivers/usb/usbd_usr.c      \
+drivers/usb_cdc.c
+
 
 ##
 ## List here additional static libraries with relative path
