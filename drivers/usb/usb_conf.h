@@ -68,6 +68,9 @@
  #define USB_OTG_FS_CORE
 #endif
 
+#define USB_VCP_DISABLE_VBUS
+#define USB_VCP_DISABLE_ID
+
 /****************** USB OTG HS PHY CONFIGURATION *******************************
 *  The USB OTG HS Core supports two PHY interfaces:
 *   (i)  An ULPI interface for the external High Speed PHY: the USB HS Core will 
