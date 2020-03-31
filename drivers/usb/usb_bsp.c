@@ -53,7 +53,7 @@ void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *usb_dev)
 
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
     GPIOA->MODER   |= (0x02 << 2*11)   | (0x02 << 2*12);  // Alternate mode
-    GPIOA->AFR[1]  |= (0x0E << 4*3)    | (0x0E << 4*4);   // AF14
+    GPIOA->AFR[1]  |= (0x0A << 4*3)    | (0x0A << 4*4);   // AF10
     GPIOA->PUPDR   &= ~((0x03 << 2*11) | (0x03 << 2*12)); // No pull-up/pull-down
     GPIOA->OSPEEDR |= (0x03 << 2*11)   | (0x03 << 2*12);  // High speed
 
@@ -62,29 +62,6 @@ void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *usb_dev)
 
     //TODO: fix priority definition
     NVIC_SetPriority(OTG_FS_IRQn, ((configMAX_SYSCALL_INTERRUPT_PRIORITY) >> 4));
-    
-//   pin_enable(USB_VBUS_PIN);
-//   pin_set_mode(USB_VBUS_PIN, PIN_MODE_INPUT);
-//   pin_set_pupd(USB_VBUS_PIN, PIN_PUPD_NONE);
-// 
-//   pin_enable(USB_DM_PIN);
-//   pin_set_af(USB_DM_PIN, PIN_AF_OTG_FS);
-//   pin_set_ospeed(USB_DM_PIN, PIN_SPEED_100MHZ);
-//   pin_set_otype(USB_DM_PIN, PIN_TYPE_PUSHPULL);
-//   pin_set_pupd(USB_DM_PIN, PIN_PUPD_NONE);
-//   pin_set_mode(USB_DM_PIN, PIN_MODE_AF);
-// 
-//   pin_enable(USB_DP_PIN);
-//   pin_set_af(USB_DP_PIN, PIN_AF_OTG_FS);
-//   pin_set_ospeed(USB_DP_PIN, PIN_SPEED_100MHZ);
-//   pin_set_otype(USB_DP_PIN, PIN_TYPE_PUSHPULL);
-//   pin_set_pupd(USB_DP_PIN, PIN_PUPD_NONE);
-//   pin_set_mode(USB_DP_PIN, PIN_MODE_AF);
-// 
-//   rcc_enable(RCCDEV_SYSCFG);
-//   rcc_enable(RCCDEV_OTGFS);
-// 
-//   interrupt_set_priority(OTG_FS_IRQn, INTERRUPT_PRIORITY_FREERTOS_SAFE);
 }
 
 /**
