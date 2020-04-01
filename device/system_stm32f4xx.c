@@ -306,19 +306,35 @@ static void SetSysClock(void)
     RCC->APB1ENR |= RCC_APB1ENR_PWREN;
     PWR->CR |= PWR_CR_VOS;
 
-    /* HCLK = SYSCLK / 1*/
-    RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
-      
-    /* PCLK2 = HCLK / 2*/
-    RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
+//     /* HCLK = SYSCLK / 1*/
+//     RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
+//       
+//     /* PCLK2 = HCLK / 2*/
+//     RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
+//     
+//     /* PCLK1 = HCLK / 4*/
+//     RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;
+// 
+//     /* Configure the main PLL */
+//     RCC->PLLCFGR = PLL_M | (PLL_N << 6) | (((PLL_P >> 1) -1) << 16) |
+//                    (RCC_PLLCFGR_PLLSRC_HSE) | (PLL_Q << 24);
+
+    /*
+     * Clock tree as per recovery bootloader:
+     * 
+     * HCLK  = 72MHz
+     * PCLK1 = 36MHz
+     * PCLK2 = 72MHz
+     * 
+     * PLL_M = 8   -> fin  = HSE_VALUE/8 = 1MHz
+     * PLL_N = 288 -> fvco = 288MHz
+     * PLL_P = 4   -> HCLK
+     * PLL_Q = 6   -> USB_CLK = 48MHz
+     */
     
-    /* PCLK1 = HCLK / 4*/
-    RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;
-
-    /* Configure the main PLL */
-    RCC->PLLCFGR = PLL_M | (PLL_N << 6) | (((PLL_P >> 1) -1) << 16) |
-                   (RCC_PLLCFGR_PLLSRC_HSE) | (PLL_Q << 24);
-
+    RCC->PLLCFGR = 0x06414808;
+    RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
+    
     /* Enable the main PLL */
     RCC->CR |= RCC_CR_PLLON;
 
