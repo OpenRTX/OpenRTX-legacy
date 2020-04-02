@@ -53,7 +53,7 @@ extern uint32_t USBD_OTG_ISR_Handler(USB_OTG_CORE_HANDLE *pdev);
 
 void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev) {
   GPIO_InitTypeDef GPIO_InitStructure;   
-#ifdef USE_USB_OTG_FS
+
 	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOA , ENABLE);  
 	GPIO_InitStructure.GPIO_Pin = 	GPIO_Pin_11; // OTG FS Data -
 
@@ -127,9 +127,6 @@ void USB_OTG_BSP_uDelay (const uint32_t usec) {
 void USB_OTG_BSP_mDelay (const uint32_t msec) {
 	USB_OTG_BSP_uDelay(msec * 1000);
 }
-
-
-#ifdef USE_USB_OTG_FS
 
 void OTG_FS_WKUP_IRQHandler(void)
 {
