@@ -48,11 +48,11 @@ extern USB_OTG_CORE_HANDLE           USB_OTG_dev;
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 LINE_CODING linecoding = {
-	115200, /* baud rate */
-	0x00,   /* stop bits-1 */
-	0x00,   /* parity - none */
-	0x08,   /* nb. of bits 8 */
-	1		/* Changed flag */
+    115200, /* baud rate */
+    0x00,   /* stop bits-1 */
+    0x00,   /* parity - none */
+    0x08,   /* nb. of bits 8 */
+    1       /* Changed flag */
 };
 
 /* These are external variables imported from CDC core to be used for IN 
@@ -111,13 +111,13 @@ static uint16_t VCP_DeInit(void) {
   */
 static uint16_t VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
 { /*
-	int i;
-	printf("Command: 0x%02X: ", Cmd);
-	for (i = 0; i < Len; i++) {
-		printf("0x%02X ", Buf[i]);
-	}
-	printf("\n");
-	*/
+    int i;
+    printf("Command: 0x%02X: ", Cmd);
+    for (i = 0; i < Len; i++) {
+        printf("0x%02X ", Buf[i]);
+    }
+    printf("\n");
+    */
   switch (Cmd)
   {
   case SEND_ENCAPSULATED_COMMAND:
@@ -145,7 +145,7 @@ static uint16_t VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
     linecoding.format = Buf[4];
     linecoding.paritytype = Buf[5];
     linecoding.datatype = Buf[6];
-	linecoding.changed = 1;
+    linecoding.changed = 1;
   
     //VCP_COMConfig(OTHER_CONFIG);
     break;
@@ -161,7 +161,7 @@ static uint16_t VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
     break;
 
   case SET_CONTROL_LINE_STATE:
-	//printf("Set control line state\n");
+    //printf("Set control line state\n");
     /* Not  needed for this driver */
     break;
 
@@ -185,22 +185,22 @@ static uint16_t VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
   * @retval Result of the opeartion: USBD_OK if all operations are OK else VCP_FAIL
   */
 uint16_t VCP_DataTx (uint8_t* Buf, uint32_t Len) {
-	uint32_t tx_counter = 0;
-	
-	while (tx_counter < Len) {
-		APP_Rx_Buffer[APP_Rx_ptr_in] = *(Buf+tx_counter);
-		
-		APP_Rx_ptr_in++;
-		
-		/* To avoid buffer overflow */
-		if (APP_Rx_ptr_in >= APP_RX_DATA_SIZE) {
-			APP_Rx_ptr_in = 0;
-		}
-		
-		tx_counter++;
-	}
-	
-	return USBD_OK;
+    uint32_t tx_counter = 0;
+    
+    while (tx_counter < Len) {
+        APP_Rx_Buffer[APP_Rx_ptr_in] = *(Buf+tx_counter);
+        
+        APP_Rx_ptr_in++;
+        
+        /* To avoid buffer overflow */
+        if (APP_Rx_ptr_in >= APP_RX_DATA_SIZE) {
+            APP_Rx_ptr_in = 0;
+        }
+        
+        tx_counter++;
+    }
+    
+    return USBD_OK;
 }
 
 /**
@@ -219,11 +219,11 @@ uint16_t VCP_DataTx (uint8_t* Buf, uint32_t Len) {
   * @retval Result of the opeartion: USBD_OK if all operations are OK else VCP_FAIL
   */
 uint16_t VCP_DataRx (uint8_t* Buf, uint32_t Len) {
-	uint32_t i;
-	for (i = 0; i < Len; i++) {
-		/* Add data to internal buffer */
-		TM_INT_USB_VCP_AddReceived(*(Buf + i));
-	}
-	
-	return USBD_OK;
+    uint32_t i;
+    for (i = 0; i < Len; i++) {
+        /* Add data to internal buffer */
+        TM_INT_USB_VCP_AddReceived(*(Buf + i));
+    }
+    
+    return USBD_OK;
 }

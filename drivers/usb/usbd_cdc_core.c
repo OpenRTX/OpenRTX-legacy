@@ -754,7 +754,7 @@ static void Handle_USBAsynchXfer (void *pdev)
       USB_Tx_ptr = APP_Rx_ptr_out;
       USB_Tx_length = CDC_DATA_IN_PACKET_SIZE;
       
-      APP_Rx_ptr_out += CDC_DATA_IN_PACKET_SIZE;	
+      APP_Rx_ptr_out += CDC_DATA_IN_PACKET_SIZE;    
       APP_Rx_length -= CDC_DATA_IN_PACKET_SIZE;
     }
     else

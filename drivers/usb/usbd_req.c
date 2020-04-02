@@ -253,7 +253,7 @@ USBD_Status  USBD_StdEPReq (USB_OTG_CORE_HANDLE  *pdev, USB_SETUP_REQ  *req)
       {
         DCD_EP_Stall(pdev , ep_addr);
       }
-      break;	
+      break;    
       
     case USB_OTG_CONFIGURED:   
       if (req->wValue == USB_FEATURE_EP_HALT)
@@ -284,7 +284,7 @@ USBD_Status  USBD_StdEPReq (USB_OTG_CORE_HANDLE  *pdev, USB_SETUP_REQ  *req)
       {
         DCD_EP_Stall(pdev , ep_addr);
       }
-      break;	
+      break;    
       
     case USB_OTG_CONFIGURED:   
       if (req->wValue == USB_FEATURE_EP_HALT)
@@ -312,7 +312,7 @@ USBD_Status  USBD_StdEPReq (USB_OTG_CORE_HANDLE  *pdev, USB_SETUP_REQ  *req)
       {
         DCD_EP_Stall(pdev , ep_addr);
       }
-      break;	
+      break;    
       
     case USB_OTG_CONFIGURED:         
       
@@ -559,7 +559,7 @@ static void USBD_SetConfig(USB_OTG_CORE_HANDLE  *pdev,
     {
     case USB_OTG_ADDRESSED:
       if (cfgidx) 
-      {                                			   							   							   				
+      {                                                                                                                 
         pdev->dev.device_config = cfgidx;
         pdev->dev.device_status = USB_OTG_CONFIGURED;
         USBD_SetCfg(pdev , cfgidx);
@@ -596,7 +596,7 @@ static void USBD_SetConfig(USB_OTG_CORE_HANDLE  *pdev,
       }
       break;
       
-    default:					
+    default:                    
        USBD_CtlError(pdev , req);                     
       break;
     }
@@ -716,7 +716,7 @@ static void USBD_SetFeature(USB_OTG_CORE_HANDLE  *pdev,
       dctl.b.tstctl = 1;
       break;
       
-    case 2: // TEST_K	
+    case 2: // TEST_K   
       dctl.b.tstctl = 2;
       break;
       
