@@ -29,6 +29,8 @@ int main (void)
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
     GPIOE->MODER |= (1 << 2) | 1;
 
+    TM_USB_VCP_Init();
+
     xTaskCreate(led, "grn", 256, NULL, 1, NULL);
     xTaskCreate(print, "red", 256, NULL, 0, NULL);
     vTaskStartScheduler();
