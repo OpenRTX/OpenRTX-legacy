@@ -6,20 +6,7 @@
 #include "task.h"
 #include "usb_vcp.h"
 #include "usb_bsp.h"
-
-// int main (void)
-// {
-//     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
-//     GPIOE->MODER |= (1 << 2) | 1;
-// 
-//     TM_USB_VCP_Init();
-// 
-//     while (1)
-//     {
-//         TM_USB_VCP_Puts("Test\r\n\0");
-//         USB_OTG_BSP_mDelay(500);
-//     }
-// }
+#include "gpio.h"
 
 static void led(void*);
 static void print(void*);
@@ -27,7 +14,9 @@ static void print(void*);
 int main (void)
 {
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
-    GPIOE->MODER |= (1 << 2) | 1;
+
+    gpio_setMode(GPIOE_BASE, 0, OUTPUT);
+    gpio_setMode(GPIOE_BASE, 1, OUTPUT);
 
     TM_USB_VCP_Init();
 
@@ -51,7 +40,7 @@ static void led(void* p)
 {
     for(;;)
     {
-        GPIOE->ODR ^= (1 << 1); // PE1
+        gpio_togglePin(GPIOE_BASE, 1);
         vTaskDelay(500);
     }
 }
