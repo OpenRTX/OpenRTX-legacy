@@ -91,10 +91,7 @@ void gpio_setOutputSpeed(uint32_t port, uint8_t pin, enum Speed spd);
  * @param port: GPIO port, it has to be equal to GPIOA_BASE, GPIOB_BASE, ...
  * @param pin: GPIO pin number, between 0 and 15.
  */
-static inline void gpio_setPin(uint32_t port, uint8_t pin)
-{
-    ((GPIO_TypeDef *) port)->BSRRL = (1 << pin);
-}
+void gpio_setPin(uint32_t port, uint8_t pin);
 
 /**
  * Set GPIO pin to low logic level.
@@ -102,10 +99,7 @@ static inline void gpio_setPin(uint32_t port, uint8_t pin)
  * @param port: GPIO port, it has to be equal to GPIOA_BASE, GPIOB_BASE, ...
  * @param pin: GPIO pin number, between 0 and 15.
  */
-static inline void gpio_clearPin(uint32_t port, uint8_t pin)
-{
-    ((GPIO_TypeDef *) port)->BSRRH = (1 << pin);
-}
+void gpio_clearPin(uint32_t port, uint8_t pin);
 
 /**
  * Toggle logic level of a GPIO pin, with respect to its state before calling
@@ -113,10 +107,7 @@ static inline void gpio_clearPin(uint32_t port, uint8_t pin)
  * @param port: GPIO port, it has to be equal to GPIOA_BASE, GPIOB_BASE, ...
  * @param pin: GPIO pin number, between 0 and 15.
  */
-static inline void gpio_togglePin(uint32_t port, uint8_t pin)
-{
-    ((GPIO_TypeDef *) port)->ODR ^= (1 << pin);
-}
+void gpio_togglePin(uint32_t port, uint8_t pin);
 
 /**
  * Read GPIO pin's logic level.
@@ -124,9 +115,6 @@ static inline void gpio_togglePin(uint32_t port, uint8_t pin)
  * @param pin: GPIO pin number, between 0 and 15.
  * @return 1 if pin is at high logic level, 0 if pin is at low logic level.
  */
-inline uint8_t gpio_readPin(const uint32_t port, uint8_t pin)
-{
-    return ((((GPIO_TypeDef *) port)->IDR & (1 << pin)) != 0) ? 1 : 0;
-}
+uint8_t gpio_readPin(const uint32_t port, uint8_t pin);
 
 #endif /* GPIO_H */

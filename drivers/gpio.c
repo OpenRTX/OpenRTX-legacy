@@ -123,3 +123,23 @@ void gpio_setOutputSpeed(uint32_t port, uint8_t pin, enum Speed spd)
     ((GPIO_TypeDef *) port)->OSPEEDR &= ~(3 << (pin*2));   // Clear old value
     ((GPIO_TypeDef *) port)->OSPEEDR |= spd << (pin*2);    // Set new value
 }
+
+void gpio_setPin(uint32_t port, uint8_t pin)
+{
+    ((GPIO_TypeDef *) port)->BSRRL = (1 << pin);
+}
+
+void gpio_clearPin(uint32_t port, uint8_t pin)
+{
+    ((GPIO_TypeDef *) port)->BSRRH = (1 << pin);
+}
+
+void gpio_togglePin(uint32_t port, uint8_t pin)
+{
+    ((GPIO_TypeDef *) port)->ODR ^= (1 << pin);
+}
+
+uint8_t gpio_readPin(const uint32_t port, uint8_t pin)
+{
+    return ((((GPIO_TypeDef *) port)->IDR & (1 << pin)) != 0) ? 1 : 0;
+}
