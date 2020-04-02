@@ -31,15 +31,6 @@
 #include "usbd_conf.h"
 #include "usb_vcp.h"
 #include "stm32f4xx.h"
-#include "misc.h"
-
-#ifndef USB_VCP_NVIC_PRIORITY
-#define USB_VCP_NVIC_PRIORITY           0x01
-#endif
-
-#ifndef USB_VCP_NVIC_SUBPRIORITY
-#define USB_VCP_NVIC_SUBPRIORITY        0x01
-#endif
 
 extern USB_OTG_CORE_HANDLE           USB_OTG_dev;
 extern uint32_t USBD_OTG_ISR_Handler(USB_OTG_CORE_HANDLE *pdev);
@@ -51,8 +42,9 @@ extern uint32_t USBD_OTG_ISR_Handler(USB_OTG_CORE_HANDLE *pdev);
 * @retval None
 */
 
-void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev) {
-  GPIO_InitTypeDef GPIO_InitStructure;   
+void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
+{
+  GPIO_InitTypeDef GPIO_InitStructure;
 
     RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOA , ENABLE);  
     GPIO_InitStructure.GPIO_Pin =   GPIO_Pin_11; // OTG FS Data -
@@ -85,19 +77,11 @@ void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev) {
 * @param  None
 * @retval None
 */
-void USB_OTG_BSP_EnableInterrupt(USB_OTG_CORE_HANDLE *pdev) {
-//  NVIC_InitTypeDef NVIC_InitStructure;
-//  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-//  NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_IRQn;  
-//  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = USB_VCP_NVIC_PRIORITY;
-//  NVIC_InitStructure.NVIC_IRQChannelSubPriority = USB_VCP_NVIC_SUBPRIORITY + 2;
-//  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//  NVIC_Init(&NVIC_InitStructure);
-    
+void USB_OTG_BSP_EnableInterrupt(USB_OTG_CORE_HANDLE *pdev)
+{
     NVIC_ClearPendingIRQ(OTG_FS_IRQn);
     NVIC_SetPriority(OTG_FS_IRQn, 14);
     NVIC_EnableIRQ(OTG_FS_IRQn);
-
 }
 /**
 * @brief  USB_OTG_BSP_uDelay
@@ -106,12 +90,14 @@ void USB_OTG_BSP_EnableInterrupt(USB_OTG_CORE_HANDLE *pdev) {
 * @retval None
 */
 void USB_OTG_BSP_uDelay (const uint32_t usec) {
+
     uint32_t count = 0;
     const uint32_t utime = (120 * usec / 7);
-    
+
     do
     {
-        if ( ++count > utime ) {
+        if( ++count > utime )
+        {
             return ;
         }
     } while (1);
@@ -124,14 +110,9 @@ void USB_OTG_BSP_uDelay (const uint32_t usec) {
 * @param  msec : Value of delay required in milli sec
 * @retval None
 */
-void USB_OTG_BSP_mDelay (const uint32_t msec) {
-    USB_OTG_BSP_uDelay(msec * 1000);
-}
-
-void OTG_FS_WKUP_IRQHandler(void)
+void USB_OTG_BSP_mDelay (const uint32_t msec)
 {
-    GPIOE->ODR ^= (1 << 1);
-    EXTI_ClearITPendingBit(EXTI_Line18);
+    USB_OTG_BSP_uDelay(msec * 1000);
 }
 
 void OTG_FS_IRQHandler(void)
