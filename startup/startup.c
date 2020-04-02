@@ -60,7 +60,17 @@ void Reset_Handler()
 
     __enable_irq();
 
-    SystemCoreClockUpdate();
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN
+                  | RCC_AHB1ENR_GPIOBEN
+                  | RCC_AHB1ENR_GPIOCEN
+                  | RCC_AHB1ENR_GPIODEN
+                  | RCC_AHB1ENR_GPIOEEN
+                  | RCC_AHB1ENR_GPIOFEN
+                  | RCC_AHB1ENR_GPIOGEN
+                  | RCC_AHB1ENR_GPIOHEN
+                  | RCC_AHB1ENR_GPIOIEN
+                  | RCC_AHB1ENR_GPIOJEN
+                  | RCC_AHB1ENR_GPIOKEN;
 
     //Jump to application code 
     main(0, NULL);

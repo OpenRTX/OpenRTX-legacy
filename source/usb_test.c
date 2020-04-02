@@ -13,7 +13,7 @@ static void print(void*);
 
 int main (void)
 {
-    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
+//     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
 
     gpio_setMode(GPIOE_BASE, 0, OUTPUT);
     gpio_setMode(GPIOE_BASE, 1, OUTPUT);
