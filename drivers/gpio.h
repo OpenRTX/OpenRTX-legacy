@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2020 by Silvano Seva, IU2KWO                            *
+ *   Copyright (C) 2020 by Silvano Seva IU2KWO                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -28,6 +28,7 @@
 #ifndef GPIO_H
 #define GPIO_H
 
+#include <stdint.h>
 #include "stm32f4xx.h"
 
 /**
@@ -64,7 +65,7 @@ enum Speed
  * @param pin: GPIO pin number, between 0 and 15.
  * @param mode: GPIO functional mode to be set.
  */
-void gpio_setMode(GPIO_TypeDef *port, uint8_t pin, enum Mode mode);
+void gpio_setMode(uint32_t port, uint8_t pin, enum Mode mode);
 
 /**
  * Map alternate function to GPIO pin. The pin has to be configured in alternate
@@ -74,7 +75,7 @@ void gpio_setMode(GPIO_TypeDef *port, uint8_t pin, enum Mode mode);
  * @param afNum: alternate function number, retrieved from mapping table in
  * microcontroller's datasheet.
  */
-void gpio_setAlternateFunction(GPIO_TypeDef *port, uint8_t pin, uint8_t afNum);
+void gpio_setAlternateFunction(uint32_t port, uint8_t pin, uint8_t afNum);
 
 /**
  * Configure GPIO pin maximum output speed.
@@ -82,11 +83,7 @@ void gpio_setAlternateFunction(GPIO_TypeDef *port, uint8_t pin, uint8_t afNum);
  * @param pin: GPIO pin number, between 0 and 15.
  * @param spd: GPIO output speed to be set.
  */
-void gpio_setOutputSpeed(GPIO_TypeDef *port, uint8_t pin, enum Speed spd)
-{
-    port->OSPEEDR &= ~(3 << (pin*2));   // Clear old value
-    port->OSPEEDR |= spd << (pin*2);    // Set new value
-}
+void gpio_setOutputSpeed(uint32_t port, uint8_t pin, enum Speed spd);
 
 /**
  * Set GPIO pin to high logic level.
@@ -94,9 +91,9 @@ void gpio_setOutputSpeed(GPIO_TypeDef *port, uint8_t pin, enum Speed spd)
  * @param port: GPIO port, it has to be equal to GPIOA_BASE, GPIOB_BASE, ...
  * @param pin: GPIO pin number, between 0 and 15.
  */
-inline void gpio_SetPin(GPIO_TypeDef *port, uint8_t pin)
+static inline void gpio_setPin(uint32_t port, uint8_t pin)
 {
-    port->BSRRL = (1 << pin);
+    ((GPIO_TypeDef *) port)->BSRRL = (1 << pin);
 }
 
 /**
@@ -105,9 +102,9 @@ inline void gpio_SetPin(GPIO_TypeDef *port, uint8_t pin)
  * @param port: GPIO port, it has to be equal to GPIOA_BASE, GPIOB_BASE, ...
  * @param pin: GPIO pin number, between 0 and 15.
  */
-inline void gpio_ClearPin(GPIO_TypeDef *port, uint8_t pin)
+static inline void gpio_clearPin(uint32_t port, uint8_t pin)
 {
-    port->BSRRH = (1 << pin);
+    ((GPIO_TypeDef *) port)->BSRRH = (1 << pin);
 }
 
 /**
@@ -116,9 +113,9 @@ inline void gpio_ClearPin(GPIO_TypeDef *port, uint8_t pin)
  * @param port: GPIO port, it has to be equal to GPIOA_BASE, GPIOB_BASE, ...
  * @param pin: GPIO pin number, between 0 and 15.
  */
-inline void gpio_togglePin(GPIO_TypeDef *port, uint8_t pin)
+static inline void gpio_togglePin(uint32_t port, uint8_t pin)
 {
-    port->ODR ^= (1 << pin);
+    ((GPIO_TypeDef *) port)->ODR ^= (1 << pin);
 }
 
 /**
@@ -127,9 +124,9 @@ inline void gpio_togglePin(GPIO_TypeDef *port, uint8_t pin)
  * @param pin: GPIO pin number, between 0 and 15.
  * @return 1 if pin is at high logic level, 0 if pin is at low logic level.
  */
-inline uint8_t gpio_readPin(const GPIO_TypeDef *port, uint8_t pin)
+inline uint8_t gpio_readPin(const uint32_t port, uint8_t pin)
 {
-    return ((port->IDR & (1 << pin)) != 0) ? 1 : 0;
+    return ((((GPIO_TypeDef *) port)->IDR & (1 << pin)) != 0) ? 1 : 0;
 }
 
 #endif /* GPIO_H */
