@@ -74,16 +74,17 @@ device/system_stm32f4xx.c
 ## Operating system's source files and include directories
 ##
 OS_INC := -Ifreertos/portable/GCC/ARM_CM4F -Ifreertos/include
-OS_SRC :=                             \
-freertos/croutine.c                   \
-freertos/event_groups.c               \
-freertos/list.c                       \
-freertos/queue.c                      \
-freertos/stream_buffer.c              \
-freertos/tasks.c                      \
-freertos/timers.c                     \
-freertos/portable/GCC/ARM_CM4F/port.c \
-freertos/portable/MemMang/heap_3.c
+OS_SRC :=    
+# \
+# freertos/croutine.c                   \
+# freertos/event_groups.c               \
+# freertos/list.c                       \
+# freertos/queue.c                      \
+# freertos/stream_buffer.c              \
+# freertos/tasks.c                      \
+# freertos/timers.c                     \
+# freertos/portable/GCC/ARM_CM4F/port.c \
+# freertos/portable/MemMang/heap_3.c
 
 ##
 ## Exceptions support. Uncomment to disable them and save code size

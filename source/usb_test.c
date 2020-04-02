@@ -1,8 +1,6 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "FreeRTOS.h"
-#include "task.h"
 #include "stm32f4xx.h"
 #include "usb_vcp.h"
 
@@ -11,8 +9,8 @@ int main (void)
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
     GPIOE->MODER |= (1 << 2) | 1;
 
-    if(RCC->CR & RCC_CR_HSERDY) GPIOE->ODR ^= (1 << 0);
-    if((RCC->CFGR & RCC_CFGR_SWS ) == RCC_CFGR_SWS_PLL) GPIOE->ODR ^= (1 << 1);
+//     if(RCC->CR & RCC_CR_HSERDY) GPIOE->ODR ^= (1 << 0);
+//     if((RCC->CFGR & RCC_CFGR_SWS ) == RCC_CFGR_SWS_PLL) GPIOE->ODR ^= (1 << 1);
 
     TM_USB_VCP_Init();
     uint8_t c;
@@ -30,11 +28,6 @@ int main (void)
         {
         }
 
-        vTaskDelay(50);
+//         vTaskDelay(50);
     }
 }
-
-void vApplicationTickHook() { }
-void vApplicationStackOverflowHook() { }
-void vApplicationIdleHook() { }
-void vApplicationMallocFailedHook() { }

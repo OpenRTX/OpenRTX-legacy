@@ -75,9 +75,9 @@ void Default_Handler()
 }
 
 // Used by FreeRTOS
-void SVC_Handler();
-void PendSV_Handler();
-void SysTick_Handler();
+void __attribute__((weak)) SVC_Handler();
+void __attribute__((weak)) PendSV_Handler();
+void __attribute__((weak)) SysTick_Handler();
 
 void __attribute__((weak)) NMI_Handler();
 void __attribute__((weak)) HardFault_Handler();
