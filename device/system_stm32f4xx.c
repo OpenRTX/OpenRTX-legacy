@@ -308,10 +308,10 @@ static void SetSysClock(void)
 
     /* HCLK = SYSCLK / 1*/
     RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
-      
+
     /* PCLK2 = HCLK / 2*/
     RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
-    
+
     /* PCLK1 = HCLK / 4*/
     RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;
 
@@ -319,22 +319,6 @@ static void SetSysClock(void)
     RCC->PLLCFGR = PLL_M | (PLL_N << 6) | (((PLL_P >> 1) -1) << 16) |
                    (RCC_PLLCFGR_PLLSRC_HSE) | (PLL_Q << 24);
 
-    /*
-     * Clock tree as per recovery bootloader:
-     * 
-     * HCLK  = 72MHz
-     * PCLK1 = 36MHz
-     * PCLK2 = 72MHz
-     * 
-     * PLL_M = 8   -> fin  = HSE_VALUE/8 = 1MHz
-     * PLL_N = 288 -> fvco = 288MHz
-     * PLL_P = 4   -> HCLK
-     * PLL_Q = 6   -> USB_CLK = 48MHz
-     */
-/*    
-    RCC->PLLCFGR = 0x06414808;
-    RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;*/
-    
     /* Enable the main PLL */
     RCC->CR |= RCC_CR_PLLON;
 
@@ -342,7 +326,7 @@ static void SetSysClock(void)
     while((RCC->CR & RCC_CR_PLLRDY) == 0)
     {
     }
-   
+
     /* Configure Flash prefetch, Instruction cache, Data cache and wait state */
     FLASH->ACR = FLASH_ACR_ICEN |FLASH_ACR_DCEN |FLASH_ACR_LATENCY_5WS;
 
