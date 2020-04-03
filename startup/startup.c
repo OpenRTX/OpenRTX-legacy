@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2020 by Silvano Seva                                    *
+ *   Copyright (C) 2020 by Silvano Seva IU2KWO                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -38,7 +38,9 @@ void Reset_Handler()
 {
     __disable_irq();
 
-    //Call CMSIS init function, it's safe to do it here.
+    // Call CMSIS init function, it's safe to do it here.
+    // This function initialises VTOR, clock-tree and flash memory wait states.
+    // System clock frequency is 168MHz.
     SystemInit();
 
     //These are defined in the linker script
@@ -48,7 +50,7 @@ void Reset_Handler()
     extern unsigned char _bss_start asm("_bss_start");
     extern unsigned char _bss_end asm("_bss_end");
 
-    //Initialize .data section, clear .bss section
+    // Initialize .data section, clear .bss section
     unsigned char *etext=&_etext;
     unsigned char *data=&_data;
     unsigned char *edata=&_edata;
@@ -60,22 +62,24 @@ void Reset_Handler()
 
     __enable_irq();
 
+    // General system configurations: enabling all GPIO ports.
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN
-                  | RCC_AHB1ENR_GPIOBEN
-                  | RCC_AHB1ENR_GPIOCEN
-                  | RCC_AHB1ENR_GPIODEN
-                  | RCC_AHB1ENR_GPIOEEN
-                  | RCC_AHB1ENR_GPIOFEN
-                  | RCC_AHB1ENR_GPIOGEN
-                  | RCC_AHB1ENR_GPIOHEN
-                  | RCC_AHB1ENR_GPIOIEN
-                  | RCC_AHB1ENR_GPIOJEN
-                  | RCC_AHB1ENR_GPIOKEN;
+                 |  RCC_AHB1ENR_GPIOBEN
+                 |  RCC_AHB1ENR_GPIOCEN
+                 |  RCC_AHB1ENR_GPIODEN
+                 |  RCC_AHB1ENR_GPIOEEN;
 
-    //Jump to application code 
+    // Configure all GPIO pins to fast speed mode (50MHz)
+    GPIOA->OSPEEDR = 0xAAAAAAAA;
+    GPIOB->OSPEEDR = 0xAAAAAAAA;
+    GPIOC->OSPEEDR = 0xAAAAAAAA;
+    GPIOD->OSPEEDR = 0xAAAAAAAA;
+    GPIOE->OSPEEDR = 0xAAAAAAAA;
+
+    // Jump to application code
     main(0, NULL);
 
-    //If main returns loop indefinitely
+    // If main returns loop indefinitely
     for(;;) ;
 }
 
@@ -84,17 +88,15 @@ void Default_Handler()
     // default handler does nothing
 }
 
-// Used by FreeRTOS
-void __attribute__((weak)) SVC_Handler();
-void __attribute__((weak)) PendSV_Handler();
-void __attribute__((weak)) SysTick_Handler();
-
 void __attribute__((weak)) NMI_Handler();
 void __attribute__((weak)) HardFault_Handler();
 void __attribute__((weak)) MemManage_Handler();
 void __attribute__((weak)) BusFault_Handler();
 void __attribute__((weak)) UsageFault_Handler();
+void __attribute__((weak)) SVC_Handler();
 void __attribute__((weak)) DebugMon_Handler();
+void __attribute__((weak)) PendSV_Handler();
+void __attribute__((weak)) SysTick_Handler();
 
 void __attribute__((weak)) WWDG_IRQHandler();
 void __attribute__((weak)) PVD_IRQHandler();

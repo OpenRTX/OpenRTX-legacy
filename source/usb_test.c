@@ -5,7 +5,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "usb_vcp.h"
-#include "usb_bsp.h"
 #include "gpio.h"
 
 static void led(void*);
@@ -13,8 +12,6 @@ static void print(void*);
 
 int main (void)
 {
-//     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
-
     gpio_setMode(GPIOE_BASE, 0, OUTPUT);
     gpio_setMode(GPIOE_BASE, 1, OUTPUT);
 

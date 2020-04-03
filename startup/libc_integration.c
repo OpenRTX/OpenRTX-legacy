@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2020 by Silvano Seva                                    *
+ *   Copyright (C) 2020 by Silvano Seva IU2KWO                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
