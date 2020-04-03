@@ -27,119 +27,117 @@
 
 #include "gpio.h"
 
-void gpio_setMode(uint32_t port, uint8_t pin, enum Mode mode)
+void gpio_setMode(GPIO_TypeDef *port, uint8_t pin, enum Mode mode)
 {
-    GPIO_TypeDef *p = (GPIO_TypeDef *)(port);
-
-    p->MODER  &= ~(3 << (pin*2));
-    p->OTYPER &= ~(1 << pin);
-    p->PUPDR  &= ~(3 << (pin*2));
+    port->MODER  &= ~(3 << (pin*2));
+    port->OTYPER &= ~(1 << pin);
+    port->PUPDR  &= ~(3 << (pin*2));
 
     switch(mode)
     {
         case INPUT:
             // (MODE=00 TYPE=0 PUP=00)
-            p->MODER  |= 0x00 << (pin*2);
-            p->OTYPER |= 0x00 << pin;
-            p->PUPDR  |= 0x00 << (pin*2);
+            port->MODER  |= 0x00 << (pin*2);
+            port->OTYPER |= 0x00 << pin;
+            port->PUPDR  |= 0x00 << (pin*2);
             break;
 
         case INPUT_PULL_UP:
             // (MODE=00 TYPE=0 PUP=01)
-            p->MODER  |= 0x00 << (pin*2);
-            p->OTYPER |= 0x00 << pin;
-            p->PUPDR  |= 0x01 << (pin*2);
+            port->MODER  |= 0x00 << (pin*2);
+            port->OTYPER |= 0x00 << pin;
+            port->PUPDR  |= 0x01 << (pin*2);
             break;
 
         case INPUT_PULL_DOWN:
             // (MODE=00 TYPE=0 PUP=10)
-            p->MODER  |= 0x00 << (pin*2);
-            p->OTYPER |= 0x00 << pin;
-            p->PUPDR  |= 0x02 << (pin*2);
+            port->MODER  |= 0x00 << (pin*2);
+            port->OTYPER |= 0x00 << pin;
+            port->PUPDR  |= 0x02 << (pin*2);
             break;
 
         case INPUT_ANALOG:
             // (MODE=11 TYPE=0 PUP=00)
-            p->MODER  |= 0x03 << (pin*2);
-            p->OTYPER |= 0x00 << pin;
-            p->PUPDR  |= 0x00 << (pin*2);
+            port->MODER  |= 0x03 << (pin*2);
+            port->OTYPER |= 0x00 << pin;
+            port->PUPDR  |= 0x00 << (pin*2);
             break;
 
         case OUTPUT:
             // (MODE=01 TYPE=0 PUP=00)
-            p->MODER  |= 0x01 << (pin*2);
-            p->OTYPER |= 0x00 << pin;
-            p->PUPDR  |= 0x00 << (pin*2);
+            port->MODER  |= 0x01 << (pin*2);
+            port->OTYPER |= 0x00 << pin;
+            port->PUPDR  |= 0x00 << (pin*2);
             break;
 
         case OPEN_DRAIN:
             // (MODE=01 TYPE=1 PUP=00)
-            p->MODER  |= 0x01 << (pin*2);
-            p->OTYPER |= 0x01 << pin;
-            p->PUPDR  |= 0x00 << (pin*2);
+            port->MODER  |= 0x01 << (pin*2);
+            port->OTYPER |= 0x01 << pin;
+            port->PUPDR  |= 0x00 << (pin*2);
             break;
 
         case ALTERNATE:
             // (MODE=10 TYPE=0 PUP=00)
-            p->MODER  |= 0x02 << (pin*2);
-            p->OTYPER |= 0x00 << pin;
-            p->PUPDR  |= 0x00 << (pin*2);
+            port->MODER  |= 0x02 << (pin*2);
+            port->OTYPER |= 0x00 << pin;
+            port->PUPDR  |= 0x00 << (pin*2);
             break;
 
         case ALTERNATE_OD:
             // (MODE=10 TYPE=1 PUP=00)
-            p->MODER  |= 0x02 << (pin*2);
-            p->OTYPER |= 0x01 << pin;
-            p->PUPDR  |= 0x00 << (pin*2);
+            port->MODER  |= 0x02 << (pin*2);
+            port->OTYPER |= 0x01 << pin;
+            port->PUPDR  |= 0x00 << (pin*2);
             break;
 
         default:
             // Default to INPUT mode
-            p->MODER  |= 0x00 << (pin*2);
-            p->OTYPER |= 0x00 << pin;
-            p->PUPDR  |= 0x00 << (pin*2);
+            port->MODER  |= 0x00 << (pin*2);
+            port->OTYPER |= 0x00 << pin;
+            port->PUPDR  |= 0x00 << (pin*2);
             break;
     }
 }
 
-void gpio_setAlternateFunction(uint32_t port, uint8_t pin, uint8_t afNum)
+void gpio_setAlternateFunction(GPIO_TypeDef *port, uint8_t pin, uint8_t afNum)
 {
     afNum &= 0x0F;
     if(pin < 8)
     {
-        ((GPIO_TypeDef *) port)->AFR[0] &= ~(0x0F << (pin*4));
-        ((GPIO_TypeDef *) port)->AFR[0] |= (afNum << (pin*4));
+        port->AFR[0] &= ~(0x0F << (pin*4));
+        port->AFR[0] |= (afNum << (pin*4));
     }
     else
     {
         pin -= 8;
-        ((GPIO_TypeDef *) port)->AFR[1] &= ~(0x0F << (pin*4));
-        ((GPIO_TypeDef *) port)->AFR[1] |= (afNum << (pin*4));
+        port->AFR[1] &= ~(0x0F << (pin*4));
+        port->AFR[1] |= (afNum << (pin*4));
     }
 }
 
-void gpio_setOutputSpeed(uint32_t port, uint8_t pin, enum Speed spd)
+void gpio_setOutputSpeed(GPIO_TypeDef *port, uint8_t pin, enum Speed spd)
 {
-    ((GPIO_TypeDef *) port)->OSPEEDR &= ~(3 << (pin*2));   // Clear old value
-    ((GPIO_TypeDef *) port)->OSPEEDR |= spd << (pin*2);    // Set new value
+    port->OSPEEDR &= ~(3 << (pin*2));   // Clear old value
+    port->OSPEEDR |= spd << (pin*2);    // Set new value
 }
 
-void gpio_setPin(uint32_t port, uint8_t pin)
+void gpio_setPin(GPIO_TypeDef *port, uint8_t pin)
 {
-    ((GPIO_TypeDef *) port)->BSRRL = (1 << pin);
+    port->BSRRL = (1 << pin);
 }
 
-void gpio_clearPin(uint32_t port, uint8_t pin)
+void gpio_clearPin(GPIO_TypeDef *port, uint8_t pin)
 {
-    ((GPIO_TypeDef *) port)->BSRRH = (1 << pin);
+    port->BSRRH = (1 << pin);
 }
 
-void gpio_togglePin(uint32_t port, uint8_t pin)
+void gpio_togglePin(GPIO_TypeDef *port, uint8_t pin)
 {
-    ((GPIO_TypeDef *) port)->ODR ^= (1 << pin);
+    port->ODR ^= (1 << pin);
 }
 
-uint8_t gpio_readPin(const uint32_t port, uint8_t pin)
+uint8_t gpio_readPin(const GPIO_TypeDef *port, uint8_t pin)
 {
-    return ((((GPIO_TypeDef *) port)->IDR & (1 << pin)) != 0) ? 1 : 0;
+    return ((port->IDR & (1 << pin)) != 0) ? 1 : 0;
 }

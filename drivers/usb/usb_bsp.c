@@ -45,13 +45,13 @@ extern uint32_t USBD_OTG_ISR_Handler(USB_OTG_CORE_HANDLE *pdev);
 
 void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
 {
-    gpio_setMode(GPIOA_BASE, 11, ALTERNATE);
-    gpio_setAlternateFunction(GPIOA_BASE, 11, 10);
-    gpio_setOutputSpeed(GPIOA_BASE, 11, HIGH);      // 100MHz output speed
+    gpio_setMode(GPIOA, 11, ALTERNATE);
+    gpio_setAlternateFunction(GPIOA, 11, 10);
+    gpio_setOutputSpeed(GPIOA, 11, HIGH);      // 100MHz output speed
 
-    gpio_setMode(GPIOA_BASE, 12, ALTERNATE);
-    gpio_setAlternateFunction(GPIOA_BASE, 12, 10);
-    gpio_setOutputSpeed(GPIOA_BASE, 12, HIGH);      // 100MHz output speed
+    gpio_setMode(GPIOA, 12, ALTERNATE);
+    gpio_setAlternateFunction(GPIOA, 12, 10);
+    gpio_setOutputSpeed(GPIOA, 12, HIGH);      // 100MHz output speed
 
     RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
     RCC->AHB2ENR |= RCC_AHB2ENR_OTGFSEN;

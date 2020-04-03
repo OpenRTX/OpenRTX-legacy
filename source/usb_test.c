@@ -12,8 +12,8 @@ static void print(void*);
 
 int main (void)
 {
-    gpio_setMode(GPIOE_BASE, 0, OUTPUT);
-    gpio_setMode(GPIOE_BASE, 1, OUTPUT);
+    gpio_setMode(GPIOE, 0, OUTPUT);
+    gpio_setMode(GPIOE, 1, OUTPUT);
 
     TM_USB_VCP_Init();
 
@@ -37,7 +37,7 @@ static void led(void* p)
 {
     for(;;)
     {
-        gpio_togglePin(GPIOE_BASE, 1);
+        gpio_togglePin(GPIOE, 1);
         vTaskDelay(500);
     }
 }
