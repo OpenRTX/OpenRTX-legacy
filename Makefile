@@ -34,7 +34,7 @@ INCLUDE_DIRS :=
 ##
 ## List here additional defines
 ##
-DEFINES :=
+DEFINES := -DPLATFORM_MD380
 
 ##
 ## Define used to select target processor
