@@ -2,7 +2,7 @@
 ##
 ## List here your source files (both .s, .c and .cpp)
 ##
-SRC := source/stdio_test.c
+SRC := source/main.c source/io/keyboard.c
 
 ##
 ## Drivers' source files and include directories
@@ -29,7 +29,7 @@ LIBS :=
 ##
 ## List here additional include directories (in the form -Iinclude_dir)
 ##
-INCLUDE_DIRS :=
+INCLUDE_DIRS := -Iinclude/io
 
 ##
 ## List here additional defines

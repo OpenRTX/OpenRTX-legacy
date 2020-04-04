@@ -5,17 +5,17 @@
 #include "semphr.h"
 #include "task.h"
 #include "stm32f4xx.h"
+#include "keyboard.h"
+#include "usb_vcp.h"
 
 static void sleep(uint32_t);
 
 static void green_main(void*);
 static void red_main(void*);
+static void fw_main_task(void*);
 
 int main (void)
 {
-	keyboardCode_t keys;
-	int key_event;
-
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
     GPIOE->MODER |= (1 << 2) | 1;
 
@@ -23,13 +23,15 @@ int main (void)
     xTaskCreate(red_main, "red", 256, NULL, 0, NULL);
     xTaskCreate(fw_main_task, "main", 256, NULL, 2, NULL);
     vTaskStartScheduler();
-
 }
 
 static void fw_main_task(void* data) {
+	keyboardCode_t keys;
+	int key_event;
+
     for(;;) {
         fw_check_key_event(&keys, &key_event); // Read keyboard state and event
-        if (key_event != NO_EVENT)
+        if (key_event != EVENT_KEY_NONE)
             TM_USB_VCP_Puts("A key was pressed!\r\n\0");
     }
 }

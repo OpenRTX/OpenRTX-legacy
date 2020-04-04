@@ -20,7 +20,9 @@
 #ifndef _FW_KEYBOARD_H_
 #define _FW_KEYBOARD_H_
 
-#include "common.h"
+//#include "common.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 #if defined(PLATFORM_GD77) || defined(PLATFORM_GD77S)
 

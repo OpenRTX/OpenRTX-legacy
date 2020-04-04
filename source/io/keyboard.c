@@ -16,11 +16,12 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <buttons.h>
+//#include <buttons.h>
 #include <keyboard.h>
-#include <pit.h>
-#include <settings.h>
-#include <usb_com.h>
+//#include <pit.h>
+//#include <settings.h>
+//#include <usb_com.h>
+#include <gpio.h>
 
 static char oldKeyboardCode;
 static uint32_t keyDebounceScancode;
@@ -89,7 +90,7 @@ static const char keypadAlphaMap[11][31] = {
 
 void fw_init_keyboard(void)
 {
-#if defined(PLATFORM_GD77 || defined(PLATFORM_DM1801))
+#if defined(PLATFORM_GD77) || defined(PLATFORM_DM1801)
 	port_pin_config_t config = {
 			kPORT_PullUp,
 			kPORT_FastSlewRate,
@@ -163,7 +164,7 @@ void fw_reset_keyboard(void)
 
 inline uint8_t fw_read_keyboard_col(void)
 {
-#if defined(PLATFORM_GD77 || defined(PLATFORM_DM1801))
+#if defined(PLATFORM_GD77) || defined(PLATFORM_DM1801)
 	return ~((GPIOB->PDIR)>>19) & 0x1f;
 #elif defined(PLATFORM_GD77S)
 	return 0;
@@ -179,7 +180,7 @@ uint32_t fw_read_keyboard(void)
 {
 	uint32_t result = 0;
 
-#if defined(PLATFORM_GD77 || defined(PLATFORM_DM1801))
+#if defined(PLATFORM_GD77) || defined(PLATFORM_DM1801)
 	for (int col=3; col>=0; col--)
 	{
 		GPIO_PinInit(GPIOC, col, &pin_config_output);
@@ -253,8 +254,10 @@ void fw_check_key_event(keyboardCode_t *keys, int *event)
 	bool validKey;
 	int newAlphaKey;
 	uint32_t tmp_timer_keypad;
-	uint32_t keypadTimerLong = nonVolatileSettings.keypadTimerLong * 1000;
-	uint32_t keypadTimerRepeat = nonVolatileSettings.keypadTimerRepeat * 1000;
+	//uint32_t keypadTimerLong = nonVolatileSettings.keypadTimerLong * 1000;
+	//uint32_t keypadTimerRepeat = nonVolatileSettings.keypadTimerRepeat * 1000;
+	uint32_t keypadTimerLong = 1000;
+	uint32_t keypadTimerRepeat = 1000;
 
 	*event = EVENT_KEY_NONE;
 	keys->event = 0;
