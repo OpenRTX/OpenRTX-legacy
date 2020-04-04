@@ -49,11 +49,19 @@ void init_pit(void)
 
     PIT_StartTimer(PIT, kPIT_Chnl_0);
 #elif defined(BSP_STM32F4XX)
-    // TODO: Insert here call to functions which starts the PIT timer
+    // STM32F4XX has no PIT, we use a basic timer intead
+    NVIC_ClearPendingIRQ(TIM7_IRQn);
+    NVIC_SetPriority(TIM7_IRQn, 14);
+    NVIC_EnableIRQ(TIM7_IRQn);
+    RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
 #endif
 }
 
+#if defined(BSP_FSL)
 void PIT0_IRQHandler(void)
+#elif defined(BSP_STM32F4XX)
+void TIM7_IRQHandler(void)
+#endif
 {
 	PITCounter++;// is unsigned so will wrap around
 

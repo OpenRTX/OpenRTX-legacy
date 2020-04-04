@@ -25,7 +25,7 @@
 #if defined(BSP_FSL)
 #include "fsl_pit.h"
 #elif defined(BSP_STM32F4XX)
-#include "stm32f4xx_timers.h"
+#include "stm32f4xx.h"
 #endif
 
 extern volatile uint32_t timer_maintask;
@@ -37,6 +37,10 @@ extern volatile uint32_t timer_keypad_timeout;
 extern volatile uint32_t PITCounter;
 
 void init_pit(void);
+#if defined(BSP_FSL)
 void PIT0_IRQHandler(void);
+#elif defined(BSP_STM32F4XX)
+void TIM7_IRQHandler(void);
+#endif
 
 #endif /* _FW_PIT_H_ */
