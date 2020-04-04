@@ -1,25 +1,58 @@
+##
+## OpenDMR - Open Source Firmware for DMR Radios
+##
+
+##
+## Select your radio model among the supported ones: GD77, GD77s, DM1801, MD380
+##
+RADIO := MD380
+
+##
+## Selection of MCU platform and baseband
+##
+ifeq RADIO GD77
+	PLATFORM := FSL
+	BASEBAND := HR_C6000
+	DEFINES  := -DPLATFORM_GD77
+else ifeq RADIO GD77s
+	PLATFORM := FSL
+	BASEBAND := HR_C6000
+	DEFINES  := -DPLATFORM_GD77s
+else ifeq RADIO DM1801
+	PLATFORM := FSL
+	BASEBAND := HR_C6000
+	DEFINES  := -DPLATFORM_DM1801
+else ifeq RADIO MD380
+	PLATFORM := STM32F4XX
+	BASEBAND := HR_C5000
+	DEFINES  := -DPLATFORM_MD380
+endif
 
 ##
 ## List here your source files (both .s, .c and .cpp)
 ##
-SRC := source/main.c source/io/keyboard.c
+SRC := source/main.c source/io/keyboard.c source/interfaces/pit.c
 
 ##
 ## Drivers' source files and include directories
 ##
-DRIVERS_INC := -Idrivers -Idrivers/usb
+ifeq PLATFORM FSL
+DRIVERS_INC := -Idrivers/fsl
+else ifeq PLATFORM STM32F4XX
+DRIVERS_INC := -Idrivers/stm32f4xx -Idrivers/stm32f4xx/usb
 DRIVERS_SRC := \
-drivers/usb/usb_bsp.c       \
-drivers/usb/usb_core.c      \
-drivers/usb/usb_dcd.c       \
-drivers/usb/usb_dcd_int.c   \
-drivers/usb/usbd_desc.c     \
-drivers/usb/usbd_core.c     \
-drivers/usb/usbd_ioreq.c    \
-drivers/usb/usbd_req.c      \
-drivers/usb/usbd_usr.c      \
-drivers/gpio.c              \
-drivers/usb_vcom.c
+drivers/stm32f4xx/usb/usb_bsp.c       \
+drivers/stm32f4xx/usb/usb_core.c      \
+drivers/stm32f4xx/usb/usb_dcd.c       \
+drivers/stm32f4xx/usb/usb_dcd_int.c   \
+drivers/stm32f4xx/usb/usbd_desc.c     \
+drivers/stm32f4xx/usb/usbd_core.c     \
+drivers/stm32f4xx/usb/usbd_ioreq.c    \
+drivers/stm32f4xx/usb/usbd_req.c      \
+drivers/stm32f4xx/usb/usbd_usr.c      \
+drivers/stm32f4xx/gpio.c              \
+drivers/stm32f4xx/usb_vcom.c
+endif
 
 ##
 ## List here additional static libraries with relative path
@@ -29,12 +62,12 @@ LIBS :=
 ##
 ## List here additional include directories (in the form -Iinclude_dir)
 ##
-INCLUDE_DIRS := -Iinclude/io
+INCLUDE_DIRS := -Iinclude/io -Iinclude/interfaces
 
 ##
 ## List here additional defines
 ##
-DEFINES := -DPLATFORM_MD380
+DEFINES :=
 
 ##
 ## Define used to select target processor

@@ -18,7 +18,7 @@
 
 //#include <buttons.h>
 #include <keyboard.h>
-//#include <pit.h>
+#include <pit.h>
 //#include <settings.h>
 //#include <usb_com.h>
 #include <gpio.h>
