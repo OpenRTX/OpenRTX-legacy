@@ -10,23 +10,24 @@ RADIO := MD380
 ##
 ## Selection of MCU platform and baseband
 ##
-ifeq RADIO GD77
+ifeq "$(RADIO)" "GD77"
 	PLATFORM := FSL
 	BASEBAND := HR_C6000
-	DEFINES  := -DPLATFORM_GD77
-else ifeq RADIO GD77s
+	DEFINES  := -DPLATFORM_GD77 -DBSP_FSL
+else ifeq "$(RADIO)" "GD77s"
 	PLATFORM := FSL
 	BASEBAND := HR_C6000
-	DEFINES  := -DPLATFORM_GD77s
-else ifeq RADIO DM1801
+	DEFINES  := -DPLATFORM_GD77s -DBSP_FSL
+else ifeq "$(RADIO)" "DM1801"
 	PLATFORM := FSL
 	BASEBAND := HR_C6000
-	DEFINES  := -DPLATFORM_DM1801
-else ifeq RADIO MD380
+	DEFINES  := -DPLATFORM_DM1801 -DBSP_FSL
+else ifeq "$(RADIO)" "MD380"
 	PLATFORM := STM32F4XX
 	BASEBAND := HR_C5000
-	DEFINES  := -DPLATFORM_MD380
+	DEFINES  := -DPLATFORM_MD380 -DBSP_STM32F4XX
 endif
+	
 
 ##
 ## List here your source files (both .s, .c and .cpp)
@@ -36,9 +37,9 @@ SRC := source/main.c source/io/keyboard.c source/interfaces/pit.c
 ##
 ## Drivers' source files and include directories
 ##
-ifeq PLATFORM FSL
+ifeq "$(PLATFORM)" "FSL"
 DRIVERS_INC := -Idrivers/fsl
-else ifeq PLATFORM STM32F4XX
+else ifeq "$(PLATFORM)" "STM32F4XX"
 DRIVERS_INC := -Idrivers/stm32f4xx -Idrivers/stm32f4xx/usb
 DRIVERS_SRC := \
 drivers/stm32f4xx/usb/usb_bsp.c       \
@@ -67,18 +68,24 @@ INCLUDE_DIRS := -Iinclude/io -Iinclude/interfaces
 ##
 ## List here additional defines
 ##
-DEFINES :=
+DEFINES := $(DEFINES)
 
 ##
 ## Define used to select target processor
 ##
+ifeq "$(PLATFORM)" "FSL"
+else ifeq "$(PLATFORM)" "STM32F4XX"
 TARGET := -DSTM32F40_41xxx
+endif
 
 ##
 ## System clock frequency, in hertz. Must be defined and set to correct value
 ## in order to make drivers working correctly
 ##
+ifeq "$(PLATFORM)" "FSL"
+else ifeq "$(PLATFORM)" "STM32F4XX"
 CLK_FREQ := -DHSE_VALUE=8000000
+endif
 
 ##
 ## Optimization level
@@ -91,11 +98,14 @@ OPTLEVEL := -O0
 ##
 ## Device-specific source files and include directories, e.g. startup code
 ##
+ifeq "$(PLATFORM)" "FSL"
+else ifeq "$(PLATFORM)" "STM32F4XX"
 DEVICE_INC := -ICMSIS -Idevice
 DEVICE_SRC :=                \
 startup/startup.cpp          \
 startup/libc_integration.cpp \
 device/system_stm32f4xx.c
+endif
 
 ##
 ## Operating system's source files and include directories
