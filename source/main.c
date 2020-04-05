@@ -45,9 +45,7 @@ static void fw_main_task(void* data) {
     for(;;) {
         fw_check_key_event(&keys, &key_event); // Read keyboard state and event
         if (key_event != NO_EVENT) {
-            char *str = "_ key \r\n\0";
-            str[0] = keys.key;
-            TM_USB_VCP_Puts(str);
+            printf("%c key\r\n", keys.key);
             //if(KEYCHECK_UP(keys, keys.key)) {
             //    str = " up!\r\n\0";
             //    break;
@@ -68,7 +66,6 @@ static void fw_main_task(void* data) {
             //    str = " long press!\r\n\0";
             //    break;
             //}
-            TM_USB_VCP_Puts(str);
         }
         vTaskDelay(1);
     }

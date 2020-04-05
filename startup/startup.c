@@ -29,7 +29,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "stm32f4xx.h"
-#include "../drivers/usb_vcom.h"
+#include "../drivers/stm32f4xx/usb_vcom.h"
 
 ///< Entry point for application code
 int main(int argc, char *argv[]);

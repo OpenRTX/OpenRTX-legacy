@@ -34,7 +34,7 @@
 #include <sys/fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include "../drivers/usb_vcom.h"
+#include "../drivers/stm32f4xx/usb_vcom.h"
 
 
 void pthread_mutex_unlock(){}
