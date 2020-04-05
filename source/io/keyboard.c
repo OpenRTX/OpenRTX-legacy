@@ -257,8 +257,8 @@ void fw_check_key_event(keyboardCode_t *keys, int *event)
 	uint32_t tmp_timer_keypad;
 	//uint32_t keypadTimerLong = nonVolatileSettings.keypadTimerLong * 1000;
 	//uint32_t keypadTimerRepeat = nonVolatileSettings.keypadTimerRepeat * 1000;
-	uint32_t keypadTimerLong = 1000;
-	uint32_t keypadTimerRepeat = 1000;
+	uint32_t keypadTimerLong = 5 * 1000;
+	uint32_t keypadTimerRepeat = 5 * 1000;
 
 	*event = EVENT_KEY_NONE;
 	keys->event = 0;

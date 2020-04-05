@@ -23,7 +23,6 @@ int main (void)
     gpio_setMode(GPIOD, 12, OUTPUT);
     gpio_setMode(GPIOD, 13, OUTPUT);
 
-    TM_USB_VCP_Init();
     fw_init_keyboard();
     init_pit();
 
@@ -41,31 +40,20 @@ static void fw_main_task(void* data) {
 	keyboardCode_t keys;
 	int key_event;
 
-    TM_USB_VCP_Puts("Keyboard test initialized!\r\n\0");
+    printf("Keyboard test initialized!\r\n");
     for(;;) {
         fw_check_key_event(&keys, &key_event); // Read keyboard state and event
         if (key_event != NO_EVENT) {
-            printf("%c key\r\n", keys.key);
-            //if(KEYCHECK_UP(keys, keys.key)) {
-            //    str = " up!\r\n\0";
-            //    break;
-            //}
-            //if (KEYCHECK_SHORTUP(keys, keys.key)) {
-            //    str = " shortup!\r\n\0";
-            //    break;
-            //}
-            //if (KEYCHECK_DOWN(keys, keys.key)) {
-            //    str = " down!\r\n\0";
-            //    break;
-            //}
-            //if (KEYCHECK_PRESS(keys, keys.key)) {
-            //    str = " press!\r\n\0";
-            //    break;
-            //}
-            //if (KEYCHECK_LONGDOWN(keys, keys.key)) {
-            //    str = " long press!\r\n\0";
-            //    break;
-            //}
+            if(KEYCHECK_UP(keys, keys.key))
+                printf("%c key up!\r\n", keys.key);
+            else if (KEYCHECK_SHORTUP(keys, keys.key))
+                printf("%c key shortup!\r\n", keys.key);
+            if (KEYCHECK_DOWN(keys, keys.key))
+                printf("%c key down!\r\n", keys.key);
+            if (KEYCHECK_PRESS(keys, keys.key))
+                printf("%c key press!\r\n", keys.key);
+            else if (KEYCHECK_LONGDOWN(keys, keys.key))
+                printf("%c key long press!\r\n", keys.key);
         }
         vTaskDelay(1);
     }

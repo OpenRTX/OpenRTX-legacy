@@ -111,8 +111,7 @@ endif
 ## Operating system's source files and include directories
 ##
 OS_INC := -Ifreertos/portable/GCC/ARM_CM4F -Ifreertos/include
-OS_SRC := 
-# \
+OS_SRC := \
 freertos/croutine.c                   \
 freertos/event_groups.c               \
 freertos/list.c                       \
