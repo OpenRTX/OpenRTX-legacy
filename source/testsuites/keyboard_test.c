@@ -32,6 +32,7 @@
 #include "task.h"
 #include "stm32f4xx.h"
 #include "keyboard.h"
+#include "buttons.h"
 #include "gpio.h"
 #include "usb_vcp.h"
 
@@ -49,6 +50,7 @@ int main (void)
     gpio_setMode(GPIOD, 12, OUTPUT);
     gpio_setMode(GPIOD, 13, OUTPUT);
 
+	fw_init_buttons();
     fw_init_keyboard();
     init_pit();
 
@@ -63,13 +65,33 @@ int main (void)
 }
 
 static void fw_main_task(void* data) {
+	uint32_t buttons;
+	int button_event;
 	keyboardCode_t keys;
 	int key_event;
 
     printf("Keyboard test initialized!\r\n");
     for(;;) {
+	    fw_check_button_event(&buttons, &button_event);// Read button state and event
         fw_check_key_event(&keys, &key_event); // Read keyboard state and event
+        if (button_event != NO_EVENT) {
+            if (buttons & BUTTON_PTT)
+                printf("PTT was pressed!\r\n");
+            if (buttons & BUTTON_SK1)
+                printf("SK1 was pressed!\r\n");
+            if (buttons & BUTTON_SK2)
+                printf("SK2 was pressed!\r\n");
+        }
         if (key_event != NO_EVENT) {
+            // Give printable shape to special symbols
+            if (keys.key == 13)
+                keys.key = 'G';
+            if (keys.key == 27)
+                keys.key = 'R';
+            if (keys.key == 1)
+                keys.key = 'U';
+            if (keys.key == 2)
+                keys.key = 'D';
             if(KEYCHECK_UP(keys, keys.key))
                 printf("%c key up!\r\n", keys.key);
             else if (KEYCHECK_SHORTUP(keys, keys.key))
