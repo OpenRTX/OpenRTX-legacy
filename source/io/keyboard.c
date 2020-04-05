@@ -128,18 +128,19 @@ void fw_init_keyboard(void)
     GPIO_PinInit(GPIO_Key_Row4, Pin_Key_Row4, &pin_config_input);
 #elif defined(PLATFORM_MD380)
     // column lines
-    gpio_setMode(GPIO_Key_Col0, Pin_Key_Col0, INPUT);
-    gpio_setMode(GPIO_Key_Col1, Pin_Key_Col1, INPUT);
-    gpio_setMode(GPIO_Key_Col2, Pin_Key_Col2, INPUT);
-    gpio_setMode(GPIO_Key_Col3, Pin_Key_Col3, INPUT);
-    gpio_setMode(GPIO_Key_Col4, Pin_Key_Col4, INPUT);
-    gpio_setMode(GPIO_Key_Col5, Pin_Key_Col5, INPUT);
-    gpio_setMode(GPIO_Key_Col6, Pin_Key_Col6, INPUT);
-    gpio_setMode(GPIO_Key_Col7, Pin_Key_Col7, INPUT);
+    gpio_setMode(GPIO_Key_Col0, Pin_Key_Col0, INPUT_PULL_DOWN);
+    gpio_setMode(GPIO_Key_Col1, Pin_Key_Col1, INPUT_PULL_DOWN);
+    gpio_setMode(GPIO_Key_Col2, Pin_Key_Col2, INPUT_PULL_DOWN);
+    gpio_setMode(GPIO_Key_Col3, Pin_Key_Col3, INPUT_PULL_DOWN);
+    gpio_setMode(GPIO_Key_Col4, Pin_Key_Col4, INPUT_PULL_DOWN);
+    gpio_setMode(GPIO_Key_Col5, Pin_Key_Col5, INPUT_PULL_DOWN);
+    gpio_setMode(GPIO_Key_Col6, Pin_Key_Col6, INPUT_PULL_DOWN);
+    gpio_setMode(GPIO_Key_Col7, Pin_Key_Col7, INPUT_PULL_DOWN);
 
     // row lines
     gpio_setMode(GPIO_Key_Row0, Pin_Key_Row0, OUTPUT);
     gpio_setMode(GPIO_Key_Row1, Pin_Key_Row1, OUTPUT);
+
 #elif defined(PLATFORM_GD77S) // GD77s has no keyboard
 #endif
 
@@ -169,7 +170,7 @@ inline uint8_t fw_read_keyboard_col(void)
 #elif defined(PLATFORM_GD77S)
 	return 0;
 #elif defined(PLATFORM_MD380)
-    uint16_t idr = GPIO_Key_Col0_3->IDR;
+    uint32_t idr = GPIO_Key_Col0_3->IDR;
     return (idr & Mask_Key_Col0_1) >> Offset_Key_Col0_1 |
            (idr & Mask_Key_Col2_3) << Offset_Key_Col2_3 |
            (GPIO_Key_Col4_7->IDR & Mask_Key_Col4_7) >> Offset_Key_Col4_7;

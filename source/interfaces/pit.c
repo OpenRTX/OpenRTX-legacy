@@ -50,10 +50,14 @@ void init_pit(void)
     PIT_StartTimer(PIT, kPIT_Chnl_0);
 #elif defined(BSP_STM32F4XX)
     // STM32F4XX has no PIT, we use a basic timer intead
+    RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
+    TIM7->ARR = 1;
+    TIM7->PSC = 4200;
+    TIM7->DIER |= TIM_DIER_UIE;
+    TIM7->CR1 |= 1;
     NVIC_ClearPendingIRQ(TIM7_IRQn);
     NVIC_SetPriority(TIM7_IRQn, 14);
     NVIC_EnableIRQ(TIM7_IRQn);
-    RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
 #endif
 }
 
@@ -93,5 +97,7 @@ void TIM7_IRQHandler(void)
     /* Clear interrupt flag.*/
     PIT_ClearStatusFlags(PIT, kPIT_Chnl_0, kPIT_TimerFlag);
     __DSB();
+#elif defined(BSP_STM32F4XX)
+    TIM7->SR &= ~TIM_SR_UIF;
 #endif
 }
