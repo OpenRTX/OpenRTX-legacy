@@ -36,7 +36,7 @@ void fw_init_buttons(void)
     GPIO_PinInit(GPIO_SK2, Pin_SK2, &pin_config_input);
     GPIO_PinInit(GPIO_Orange, Pin_Orange, &pin_config_input);
 #elif defined(PLATFORM_MD380)
-    gpio_setMode(GPIO_PTT, Pin_PTT, INPUT_PULL_UP);
+    gpio_setMode(GPIO_PTT, Pin_PTT, INPUT);
     gpio_setMode(GPIO_SK1, Pin_SK1, INPUT_PULL_DOWN);
     gpio_setMode(GPIO_SK2, Pin_SK2, INPUT_PULL_DOWN);
     gpio_setMode(GPIO_Key_Row2, Pin_Key_Row2, OUTPUT);

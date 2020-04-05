@@ -33,6 +33,8 @@
 #include "stm32f4xx.h"
 #include "keyboard.h"
 #include "buttons.h"
+#include "rotary_switch.h"
+#include "pit.h"
 #include "gpio.h"
 #include "usb_vcp.h"
 
@@ -52,6 +54,7 @@ int main (void)
 
 	fw_init_buttons();
     fw_init_keyboard();
+	init_rotary_switch();
     init_pit();
 
     // Reset the display
@@ -69,11 +72,15 @@ static void fw_main_task(void* data) {
 	int button_event;
 	keyboardCode_t keys;
 	int key_event;
+	uint32_t rotary;
+	int rotary_event;
 
     printf("Keyboard test initialized!\r\n");
     for(;;) {
 	    fw_check_button_event(&buttons, &button_event);// Read button state and event
         fw_check_key_event(&keys, &key_event); // Read keyboard state and event
+		check_rotary_switch_event(&rotary, &rotary_event); // Rotary switch state and event
+        // Print buttons status
         if (button_event != NO_EVENT) {
             if (buttons & BUTTON_PTT)
                 printf("PTT was pressed!\r\n");
@@ -82,6 +89,7 @@ static void fw_main_task(void* data) {
             if (buttons & BUTTON_SK2)
                 printf("SK2 was pressed!\r\n");
         }
+        // Print keyboard status
         if (key_event != NO_EVENT) {
             // Give printable shape to special symbols
             if (keys.key == 13)
@@ -103,6 +111,9 @@ static void fw_main_task(void* data) {
             else if (KEYCHECK_LONGDOWN(keys, keys.key))
                 printf("%c key long press!\r\n", keys.key);
         }
+        // Print rotary encoder status
+        if (rotary_event != NO_EVENT)
+            printf("Channel %d was selected!\r\n", rotary);
         vTaskDelay(1);
     }
 }
