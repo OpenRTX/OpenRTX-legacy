@@ -2,7 +2,7 @@
 ##
 ## List here your source files (both .s, .c and .cpp)
 ##
-SRC := source/usb_test.c
+SRC := source/stdio_test.c
 
 ##
 ## Drivers' source files and include directories
@@ -12,16 +12,14 @@ DRIVERS_SRC := \
 drivers/usb/usb_bsp.c       \
 drivers/usb/usb_core.c      \
 drivers/usb/usb_dcd.c       \
-drivers/usb/usbd_cdc_core.c \
-drivers/usb/usbd_cdc_vcp.c  \
 drivers/usb/usb_dcd_int.c   \
-drivers/usb/usbd_core.c     \
 drivers/usb/usbd_desc.c     \
+drivers/usb/usbd_core.c     \
 drivers/usb/usbd_ioreq.c    \
 drivers/usb/usbd_req.c      \
 drivers/usb/usbd_usr.c      \
-drivers/usb_vcp.c           \
-drivers/gpio.c
+drivers/gpio.c              \
+drivers/usb_vcom.c
 
 ##
 ## List here additional static libraries with relative path
@@ -70,7 +68,8 @@ device/system_stm32f4xx.c
 ## Operating system's source files and include directories
 ##
 OS_INC := -Ifreertos/portable/GCC/ARM_CM4F -Ifreertos/include
-OS_SRC :=                             \
+OS_SRC := 
+# \
 freertos/croutine.c                   \
 freertos/event_groups.c               \
 freertos/list.c                       \

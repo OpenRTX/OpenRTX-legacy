@@ -25,23 +25,12 @@ int main (void)
     gpio_setMode(GPIOE, 0, OUTPUT);
     gpio_setMode(GPIOE, 1, OUTPUT);
 
-    vcom_init();
+    printf("Vcom ok\r\n");
 
-    char *buf[50] = {0};
-
-    for(;;)
+    while(1)
     {
-        ssize_t len = vcom_readBlock(buf, 50);
-        if(len > 0)
-        {
-            buf[len] = '\0';
-
-            char str[80];
-            int n = snprintf(str, 80, "Got %zd characters: %s\r\n", len, buf);
-            vcom_writeBlock(str, n);
-        }
-        gpio_togglePin(GPIOE, 1);
-        uDelay(500*1000);
+        char buf[50];
+        scanf("%s", buf);
+        printf("%s\r\n", buf);
     }
-
 }

@@ -34,6 +34,7 @@
 #include <sys/fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include "../drivers/usb_vcom.h"
 
 
 void pthread_mutex_unlock(){}
@@ -184,6 +185,35 @@ int _close_r(struct _reent *ptr, int fd)
  */
 int _write_r(struct _reent *ptr, int fd, const void *buf, size_t cnt)
 {
+    if(fd == STDOUT_FILENO || fd == STDERR_FILENO)
+    {
+        vcom_writeBlock(buf, cnt);
+        return cnt;
+    }
+
+    /* If fd is not stdout or stderr */
+    ptr->_errno = EBADF;
+    return -1;
+}
+
+/**
+ * \internal
+ * _read_r, read from a file.
+ */
+int _read_r(struct _reent *ptr, int fd, void *buf, size_t cnt)
+{
+    if(fd == STDIN_FILENO)
+    {
+        for(;;)
+        {
+            ssize_t r = vcom_readBlock(buf, cnt);
+            if((r < 0) || (r == cnt)) return r;
+        }
+    }
+    else
+
+    /* If fd is not stdin */
+    ptr->_errno = EBADF;
     return -1;
 }
 

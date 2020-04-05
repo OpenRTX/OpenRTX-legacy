@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "stm32f4xx.h"
+#include "../drivers/usb_vcom.h"
 
 ///< Entry point for application code
 int main(int argc, char *argv[]);
@@ -75,6 +76,14 @@ void Reset_Handler()
     GPIOC->OSPEEDR = 0xAAAAAAAA;
     GPIOD->OSPEEDR = 0xAAAAAAAA;
     GPIOE->OSPEEDR = 0xAAAAAAAA;
+
+    // Enable virtual com port (for stdin, stdout and stderr redirection)
+    vcom_init();
+
+    // Set no buffer for stdin, required to make scanf, getchar, ... working
+    // correctly
+    setvbuf(stdin, NULL, _IONBF, 0);
+
 
     // Jump to application code
     main(0, NULL);

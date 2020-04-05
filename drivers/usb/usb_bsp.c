@@ -29,7 +29,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usb_bsp.h"
 #include "usbd_conf.h"
-#include "usb_vcp.h"
 #include "stm32f4xx.h"
 #include "gpio.h"
 
