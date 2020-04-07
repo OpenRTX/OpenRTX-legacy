@@ -45,16 +45,15 @@ static uint32_t cdcCmd = 0xFF;
 static uint32_t cdcLen = 0;
 static __IO uint32_t usbd_cdc_AltSet = 0;
 
-
-/* Buffer OUT endpoint, the one receiving data from host */
+/* Buffer for OUT endpoint, the one receiving data from host */
 uint8_t outEnpBuffer[CDC_DATA_OUT_PACKET_SIZE];
 
-/* Circular uffer to incoming data enqueuement: each packet coming from host is
- * stored here, eventually erasing oldest data
+/* Circular buffer for incoming data enqueuement: each packet coming from host
+ * is stored here, eventually erasing oldest data
  */
 struct rb
 {
-    uint8_t data[RX_RING_BUF_SIZE];
+    uint8_t *data;
     size_t readPtr;
     size_t writePtr;
 }
@@ -214,8 +213,8 @@ int vcom_init()
     rxRingBuf.readPtr = 0;
     rxRingBuf.writePtr = 0;
 
-//     rxBuf.data = (uint8_t *) malloc(RX_BUF_SIZE);
-//     if(rxBuf.data == NULL) return -1;
+    rxRingBuf.data = (uint8_t *) malloc(RX_RING_BUF_SIZE);
+    if(rxRingBuf.data == NULL) return -1;
 
     USBD_Init(&USB_OTG_dev, USB_OTG_FS_CORE_ID, &USR_desc, &USBD_CDC_cb,
               &USR_cb);
@@ -253,7 +252,6 @@ ssize_t vcom_readBlock(void* buf, size_t len)
 
 static uint8_t  usbd_cdc_Init (void  *pdev, uint8_t cfgidx)
 {
-    
     uint8_t *pbuf;
 
     /* Open EP IN */
@@ -287,7 +285,7 @@ static uint8_t  usbd_cdc_DeInit (void  *pdev, uint8_t cfgidx)
     DCD_EP_Close(pdev,CDC_CMD_EP);
 
     /* Deallocate RX buffer */
-//     if(rxBuf.data != NULL) free(rxBuf.data);
+    if(rxRingBuf.data != NULL) free(rxRingBuf.data);
 
     return USBD_OK;
 }
