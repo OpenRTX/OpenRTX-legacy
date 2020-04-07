@@ -32,7 +32,8 @@ endif
 ##
 ## List here your source files (both .s, .c and .cpp)
 ##
-SRC := source/main.c source/io/keyboard.c source/interfaces/pit.c
+SRC := source/testsuites/malloc_test.c
+#source/main.c source/io/keyboard.c source/interfaces/pit.c
 
 ##
 ## Drivers' source files and include directories
