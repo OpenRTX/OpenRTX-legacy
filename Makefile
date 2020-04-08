@@ -32,7 +32,7 @@ endif
 ##
 ## List here your source files (both .s, .c and .cpp)
 ##
-SRC := source/testsuites/malloc_test.c
+SRC := source/testsuites/lcd_test.c
 #source/main.c source/io/keyboard.c source/interfaces/pit.c
 
 ##
@@ -53,7 +53,8 @@ drivers/stm32f4xx/usb/usbd_ioreq.c    \
 drivers/stm32f4xx/usb/usbd_req.c      \
 drivers/stm32f4xx/usb/usbd_usr.c      \
 drivers/stm32f4xx/gpio.c              \
-drivers/stm32f4xx/usb_vcom.c
+drivers/stm32f4xx/usb_vcom.c          \
+drivers/stm32f4xx/lcd.c
 endif
 
 ##
