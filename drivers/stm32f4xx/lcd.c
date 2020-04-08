@@ -317,10 +317,13 @@ void lcd_render()
     gpio_clearPin(CS);
     writeCmd(CMD_RAMWR);
 
-    for(size_t i = 0; i < 128*128; i++)
+    for(uint8_t r = 0; r < 128; r++)
     {
-        writeData(i & 0xFF);
-        writeData((i >> 8) & 0xFF);
+        for(uint8_t c = 0; c < 160; c++)
+        {
+            writeData(2*r);
+//             writeData((i >> 8) & 0xFF);
+        }
     }
     gpio_setPin(CS);
 }
