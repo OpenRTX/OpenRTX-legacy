@@ -35,4 +35,6 @@ void lcd_init();
 
 void lcd_render();
 
+uint8_t lcd_read();
+
 #endif /* LCH_H */

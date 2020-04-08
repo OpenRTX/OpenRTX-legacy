@@ -188,18 +188,42 @@ void lcd_init()
     gpio_clearPin(CS);
     lcd_writeCmd(CMD_SLPOUT);
     uDelay(120*1000);
+    lcd_writeCmd(CMD_GAMSET);
+    lcd_writeData(0x04);
+    lcd_writeCmd(CMD_SETPWCTR);
+    lcd_writeData(0x0A);
+    lcd_writeData(0x14);
+    lcd_writeCmd(CMD_SETSTBA);
+    lcd_writeData(0x0A);
+    lcd_writeData(0x00);
+    lcd_writeCmd(CMD_COLMOD);
+    lcd_writeData(0x05);
+    uDelay(10*1000);
+    lcd_writeCmd(CMD_CASET);
+    lcd_writeData(0x00);
+    lcd_writeData(0x00);
+    lcd_writeData(0x00);
+    lcd_writeData(0x79);
+    lcd_writeCmd(CMD_RASET);
+    lcd_writeData(0x00);
+    lcd_writeData(0x00);
+    lcd_writeData(0x00);
+    lcd_writeData(0x79);
     lcd_writeCmd(CMD_NORON);
-    lcd_writeCmd(CMD_INVOFF);
+    uDelay(10*1000);
     lcd_writeCmd(CMD_DISPON);
+    uDelay(120*1000);
+    lcd_writeCmd(CMD_RAMWR);
+
     gpio_setPin(CS);
 }
 
 void lcd_render()
 {
     gpio_clearPin(CS);
-    lcd_writeCmd(CMD_RAMWR);
+//     lcd_writeCmd(CMD_RAMWR);
 
-    for(size_t i = 0; i < 168*128; i++)
+    for(size_t i = 0; i < 128*128; i++)
     {
         /* Send random values to LCD framebuffer */
         static long int a = 16807L;
