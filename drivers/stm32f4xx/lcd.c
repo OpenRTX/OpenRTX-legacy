@@ -218,6 +218,10 @@ static uint8_t lcd_readReg(uint8_t reg)
 
 void lcd_init()
 {
+    /* Turn on backlight */
+    gpio_setMode(GPIOC, 6, OUTPUT);
+    gpio_setPin(GPIOC, 6);
+
     gpio_setMode(D0, OUTPUT);
     gpio_setMode(D1, OUTPUT);
     gpio_setMode(D2, OUTPUT);
