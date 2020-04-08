@@ -25,9 +25,10 @@
  *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
  ***************************************************************************/
 
+#include <stdio.h>
+#include <stddef.h>
 #include "gpio.h"
 #include "lcd.h"
-#include <stddef.h>
 
 /* Really ugly but useful defines */
 #define D0  GPIOD,14
@@ -116,55 +117,115 @@ static void uDelay (const uint32_t usec)
     } while (1);
 }
 
-static void lcd_writeCmd(uint8_t cmd)
+static void setDataLines(uint8_t x)
+{
+    /* Clear all data lines */
+    GPIOD->BSRRH = 0xC003;
+    GPIOE->BSRRH = 0x0780;
+
+    uint16_t xx = x;
+    GPIOD->BSRRL = ((xx << 14) & 0xC000) | ((xx >> 2) & 0x0003);
+    GPIOE->BSRRL = (xx << 3) & 0x0780;
+}
+
+static uint8_t getDataLines()
+{
+    uint8_t val = 0;
+    val = (GPIOE->IDR & 0x0780) >> 3;       /* High nibble */
+    val |= ((GPIOE->IDR & 0xC000) >> 14)    /* Low nibble */
+        |  ((GPIOE->IDR & 0x0003) << 2);
+    return val;
+}
+
+static void writeCmd(uint8_t cmd)
 {
     gpio_clearPin(RS);
     gpio_setPin(RD);
     gpio_clearPin(WR);
-    (cmd & 0x01) ? gpio_setPin(D0) : gpio_clearPin(D0);
-    (cmd & 0x02) ? gpio_setPin(D1) : gpio_clearPin(D1);
-    (cmd & 0x04) ? gpio_setPin(D2) : gpio_clearPin(D2);
-    (cmd & 0x08) ? gpio_setPin(D3) : gpio_clearPin(D3);
-    (cmd & 0x10) ? gpio_setPin(D4) : gpio_clearPin(D4);
-    (cmd & 0x20) ? gpio_setPin(D5) : gpio_clearPin(D5);
-    (cmd & 0x40) ? gpio_setPin(D6) : gpio_clearPin(D6);
-    (cmd & 0x80) ? gpio_setPin(D7) : gpio_clearPin(D7);
-    uDelay(20);
+//     (cmd & 0x01) ? gpio_setPin(D0) : gpio_clearPin(D0);
+//     (cmd & 0x02) ? gpio_setPin(D1) : gpio_clearPin(D1);
+//     (cmd & 0x04) ? gpio_setPin(D2) : gpio_clearPin(D2);
+//     (cmd & 0x08) ? gpio_setPin(D3) : gpio_clearPin(D3);
+//     (cmd & 0x10) ? gpio_setPin(D4) : gpio_clearPin(D4);
+//     (cmd & 0x20) ? gpio_setPin(D5) : gpio_clearPin(D5);
+//     (cmd & 0x40) ? gpio_setPin(D6) : gpio_clearPin(D6);
+//     (cmd & 0x80) ? gpio_setPin(D7) : gpio_clearPin(D7);
+    setDataLines(cmd);
+    uDelay(100);
     gpio_setPin(WR);
+    uDelay(100);
 }
 
-static void lcd_writeData(uint8_t val)
+static void writeData(uint8_t val)
 {
     gpio_setPin(RS);
     gpio_setPin(RD);
     gpio_clearPin(WR);
-    (val & 0x01) ? gpio_setPin(D0) : gpio_clearPin(D0);
-    (val & 0x02) ? gpio_setPin(D1) : gpio_clearPin(D1);
-    (val & 0x04) ? gpio_setPin(D2) : gpio_clearPin(D2);
-    (val & 0x08) ? gpio_setPin(D3) : gpio_clearPin(D3);
-    (val & 0x10) ? gpio_setPin(D4) : gpio_clearPin(D4);
-    (val & 0x20) ? gpio_setPin(D5) : gpio_clearPin(D5);
-    (val & 0x40) ? gpio_setPin(D6) : gpio_clearPin(D6);
-    (val & 0x80) ? gpio_setPin(D7) : gpio_clearPin(D7);
-    uDelay(20);
+//     (val & 0x01) ? gpio_setPin(D0) : gpio_clearPin(D0);
+//     (val & 0x02) ? gpio_setPin(D1) : gpio_clearPin(D1);
+//     (val & 0x04) ? gpio_setPin(D2) : gpio_clearPin(D2);
+//     (val & 0x08) ? gpio_setPin(D3) : gpio_clearPin(D3);
+//     (val & 0x10) ? gpio_setPin(D4) : gpio_clearPin(D4);
+//     (val & 0x20) ? gpio_setPin(D5) : gpio_clearPin(D5);
+//     (val & 0x40) ? gpio_setPin(D6) : gpio_clearPin(D6);
+//     (val & 0x80) ? gpio_setPin(D7) : gpio_clearPin(D7);
+    setDataLines(val);
+    uDelay(100);
     gpio_setPin(WR);
+    uDelay(100);
+}
+
+static uint8_t lcd_readReg(uint8_t reg)
+{
+    writeCmd(reg);
+
+    gpio_clearPin(RD);
+    gpio_setPin(RS);
+
+    gpio_setMode(D0, INPUT);
+    gpio_setMode(D1, INPUT);
+    gpio_setMode(D2, INPUT);
+    gpio_setMode(D3, INPUT);
+    gpio_setMode(D4, INPUT);
+    gpio_setMode(D5, INPUT);
+    gpio_setMode(D6, INPUT);
+    gpio_setMode(D7, INPUT);
+
+    uDelay(100);
+    gpio_setPin(RD);
+    uDelay(100);
+    uint8_t dummy = getDataLines();
+
+    gpio_clearPin(RD);
+    uDelay(100);
+    gpio_setPin(RD);
+    uDelay(100);
+    uint8_t value = getDataLines();
+
+    gpio_setMode(D0, OUTPUT);
+    gpio_setMode(D1, OUTPUT);
+    gpio_setMode(D2, OUTPUT);
+    gpio_setMode(D3, OUTPUT);
+    gpio_setMode(D4, OUTPUT);
+    gpio_setMode(D5, OUTPUT);
+    gpio_setMode(D6, OUTPUT);
+    gpio_setMode(D7, OUTPUT);
+
+    printf("Dummy %d, value %d\r\n", dummy, value);
+
+    return 0;
 }
 
 void lcd_init()
 {
-    gpio_setMode(D0,  OUTPUT);
-    gpio_setMode(D1,  OUTPUT);
-    gpio_setMode(D2,  OUTPUT);
-    gpio_setMode(D3,  OUTPUT);
-    gpio_setMode(D4,  OUTPUT);
-    gpio_setMode(D5,  OUTPUT);
-    gpio_setMode(D6,  OUTPUT);
-    gpio_setMode(D7,  OUTPUT);
-    gpio_setMode(WR,  OUTPUT);
-    gpio_setMode(RD,  OUTPUT);
-    gpio_setMode(CS,  OUTPUT);
-    gpio_setMode(RS,  OUTPUT);
-    gpio_setMode(RST, OUTPUT);
+    gpio_setMode(D0, OUTPUT);
+    gpio_setMode(D1, OUTPUT);
+    gpio_setMode(D2, OUTPUT);
+    gpio_setMode(D3, OUTPUT);
+    gpio_setMode(D4, OUTPUT);
+    gpio_setMode(D5, OUTPUT);
+    gpio_setMode(D6, OUTPUT);
+    gpio_setMode(D7, OUTPUT);
 
     gpio_clearPin(D0);
     gpio_clearPin(D1);
@@ -174,6 +235,12 @@ void lcd_init()
     gpio_clearPin(D5);
     gpio_clearPin(D6);
     gpio_clearPin(D7);
+
+    gpio_setMode(WR,  OUTPUT);
+    gpio_setMode(RD,  OUTPUT);
+    gpio_setMode(CS,  OUTPUT);
+    gpio_setMode(RS,  OUTPUT);
+    gpio_setMode(RST, OUTPUT);
 
     gpio_setPin(WR);    /* Idle state is high level, for these */
     gpio_setPin(RD);
@@ -185,43 +252,66 @@ void lcd_init()
     uDelay(20000);
     gpio_setPin(RST);   /* Exit from reset */
 
-    gpio_clearPin(CS);
-    lcd_writeCmd(CMD_SLPOUT);
-    uDelay(120*1000);
-    lcd_writeCmd(CMD_GAMSET);
-    lcd_writeData(0x04);
-    lcd_writeCmd(CMD_SETPWCTR);
-    lcd_writeData(0x0A);
-    lcd_writeData(0x14);
-    lcd_writeCmd(CMD_SETSTBA);
-    lcd_writeData(0x0A);
-    lcd_writeData(0x00);
-    lcd_writeCmd(CMD_COLMOD);
-    lcd_writeData(0x05);
-    uDelay(10*1000);
-    lcd_writeCmd(CMD_CASET);
-    lcd_writeData(0x00);
-    lcd_writeData(0x00);
-    lcd_writeData(0x00);
-    lcd_writeData(0x79);
-    lcd_writeCmd(CMD_RASET);
-    lcd_writeData(0x00);
-    lcd_writeData(0x00);
-    lcd_writeData(0x00);
-    lcd_writeData(0x79);
-    lcd_writeCmd(CMD_NORON);
-    uDelay(10*1000);
-    lcd_writeCmd(CMD_DISPON);
-    uDelay(120*1000);
-    lcd_writeCmd(CMD_RAMWR);
+    gpio_setMode(D0, OUTPUT);
+    gpio_setMode(D1, OUTPUT);
+    gpio_setMode(D2, OUTPUT);
+    gpio_setMode(D3, OUTPUT);
+    gpio_setMode(D4, OUTPUT);
+    gpio_setMode(D5, OUTPUT);
+    gpio_setMode(D6, OUTPUT);
+    gpio_setMode(D7, OUTPUT);
 
+    gpio_clearPin(D0);
+    gpio_clearPin(D1);
+    gpio_clearPin(D2);
+    gpio_clearPin(D3);
+    gpio_clearPin(D4);
+    gpio_clearPin(D5);
+    gpio_clearPin(D6);
+    gpio_clearPin(D7);
+
+    gpio_clearPin(CS);
+    writeCmd(CMD_SLPOUT);
+    uDelay(120*1000);
+    writeCmd(CMD_GAMSET);
+    writeData(0x04);
+    writeCmd(CMD_SETPWCTR);
+    writeData(0x0A);
+    writeData(0x14);
+    writeCmd(CMD_SETSTBA);
+    writeData(0x0A);
+    writeData(0x00);
+    writeCmd(CMD_COLMOD);
+    writeData(0x05);
+    uDelay(10*1000);
+    writeCmd(CMD_CASET);
+    writeData(0x00);
+    writeData(0x00);
+    writeData(0x00);
+    writeData(0x79);
+    writeCmd(CMD_RASET);
+    writeData(0x00);
+    writeData(0x00);
+    writeData(0x00);
+    writeData(0x79);
+    writeCmd(CMD_NORON);
+    uDelay(10*1000);
+    writeCmd(CMD_DISPON);
+    uDelay(120*1000);
+    writeCmd(CMD_RAMWR);
+
+    gpio_setPin(CS);
+
+    uDelay(120*1000);
+    gpio_clearPin(CS);
+    lcd_readReg(CMD_RDDIDIF);
     gpio_setPin(CS);
 }
 
 void lcd_render()
 {
     gpio_clearPin(CS);
-//     lcd_writeCmd(CMD_RAMWR);
+    writeCmd(CMD_RAMWR);
 
     for(size_t i = 0; i < 128*128; i++)
     {
@@ -240,8 +330,8 @@ void lcd_render()
         if (test > 0) seed = test;
         else seed = test + m;
 
-        lcd_writeData(seed & 0xFF);
-        lcd_writeData((seed >> 8) & 0xFF);
+        writeData(seed & 0xFF);
+        writeData((seed >> 8) & 0xFF);
     }
     gpio_setPin(CS);
 }
