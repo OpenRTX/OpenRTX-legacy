@@ -319,23 +319,8 @@ void lcd_render()
 
     for(size_t i = 0; i < 128*128; i++)
     {
-        /* Send random values to LCD framebuffer */
-        static long int a = 16807L;
-        static long int m = 2147483647L;
-        static long int q = 127773L;
-        static long int r = 2836L;
-
-        long int lo, hi, test, seed;
-
-        seed = i;
-        hi = seed / q;
-        lo = seed % q;
-        test = a * lo - r * hi;
-        if (test > 0) seed = test;
-        else seed = test + m;
-
-        writeData(seed & 0xFF);
-        writeData((seed >> 8) & 0xFF);
+        writeData(i & 0xFF);
+        writeData((i >> 8) & 0xFF);
     }
     gpio_setPin(CS);
 }
