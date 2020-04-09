@@ -389,6 +389,17 @@ void lcd_setBacklightLevel(uint8_t level)
 void lcd_render()
 {
     gpio_clearPin(CS);
+    gpio_setMode(D0, OUTPUT);
+    gpio_setMode(D1, OUTPUT);
+    gpio_setMode(D2, OUTPUT);
+    gpio_setMode(D3, OUTPUT);
+    gpio_setMode(D4, OUTPUT);
+    gpio_setMode(D5, OUTPUT);
+    gpio_setMode(D6, OUTPUT);
+    gpio_setMode(D7, OUTPUT);
+    gpio_setMode(WR, OUTPUT);
+    gpio_setMode(RD, OUTPUT);
+
     writeCmd(CMD_RAMWR);
 
     /* Now try writing to framebuffer using FSMC peripheral */
@@ -419,7 +430,7 @@ void lcd_render()
     {
         for(uint8_t c = 0; c < 160; c++)
         {
-            volatile uint8_t *p = ((uint8_t *)0x60000000);
+            volatile uint32_t *p = ((uint32_t *)0x60000000);
             *p = 2*r;
 //             writeData(2*r);
 //             writeData((i >> 8) & 0xFF);
