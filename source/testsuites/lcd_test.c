@@ -37,13 +37,11 @@
 void blink(void *arg)
 {
     lcd_init();
-    uint8_t blevel = 0;
+    lcd_setBacklightLevel(254);
 
     while(1)
     {
-//         lcd_render();
-        blevel += 16;
-        lcd_setBacklightLevel(blevel);
+        lcd_render();
         gpio_togglePin(GPIOE, 0);
         vTaskDelay(500);
     }
