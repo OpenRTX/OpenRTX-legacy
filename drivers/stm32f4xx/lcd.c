@@ -459,9 +459,7 @@ void lcd_render()
     {
         for(uint8_t c = 0; c < 160; c++)
         {
-            volatile uint32_t *p = ((uint32_t *)0x60000000);
-            *p = 2*r;
-//             writeData(2*r);
+            writeData(2*r);
 //             writeData((i >> 8) & 0xFF);
         }
     }
