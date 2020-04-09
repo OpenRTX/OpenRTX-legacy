@@ -31,10 +31,15 @@
 #include <stdint.h>
 #include "stm32f4xx.h"
 
+#define SCREEN_WIDTH 160
+#define SCREEN_HEIGTH 128
+
 void lcd_init();
 
-void lcd_render();
+void lcd_terminate();
 
-uint8_t lcd_read();
+void lcd_setBacklightLevel(uint8_t level);
+
+void lcd_render();
 
 #endif /* LCH_H */

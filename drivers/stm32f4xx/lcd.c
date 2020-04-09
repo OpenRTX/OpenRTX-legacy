@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include "gpio.h"
 #include "lcd.h"
 
@@ -45,7 +46,7 @@
 #define RS  GPIOD,12
 #define RST GPIOD,13
 
-/*
+/**
  * LCD command set, basic and extended
  */
 
@@ -86,7 +87,6 @@
 #define CMD_RDID2        0xdb // Read ID2
 #define CMD_RDID3        0xdc // Read ID3
 
-// Extended command set
 #define CMD_SETOSC       0xb0 // Set internal oscillator
 #define CMD_SETPWCTR     0xb1 // Set power control
 #define CMD_SETDISPLAY   0xb2 // Set display control
@@ -102,6 +102,10 @@
 #define CMD_SETGAMMA     0xe0 // Set Gamma
 #define CMD_SET_SPI_RDEN 0xfe // Set SPI Read address (and enable)
 #define CMD_GET_SPI_RDEN 0xff // Get FE A[7:0] parameter
+
+// LCD framebuffer, allocated on the heap by lcd_init().
+// Pixel format is RGB565, 16 bit per pixel
+static uint16_t *frameBuffer;
 
 static void uDelay (const uint32_t usec)
 {
@@ -142,14 +146,6 @@ static void writeCmd(uint8_t cmd)
     gpio_clearPin(RS);
     gpio_setPin(RD);
     gpio_clearPin(WR);
-//     (cmd & 0x01) ? gpio_setPin(D0) : gpio_clearPin(D0);
-//     (cmd & 0x02) ? gpio_setPin(D1) : gpio_clearPin(D1);
-//     (cmd & 0x04) ? gpio_setPin(D2) : gpio_clearPin(D2);
-//     (cmd & 0x08) ? gpio_setPin(D3) : gpio_clearPin(D3);
-//     (cmd & 0x10) ? gpio_setPin(D4) : gpio_clearPin(D4);
-//     (cmd & 0x20) ? gpio_setPin(D5) : gpio_clearPin(D5);
-//     (cmd & 0x40) ? gpio_setPin(D6) : gpio_clearPin(D6);
-//     (cmd & 0x80) ? gpio_setPin(D7) : gpio_clearPin(D7);
     setDataLines(cmd);
     uDelay(100);
     gpio_setPin(WR);
@@ -161,14 +157,6 @@ static void writeData(uint8_t val)
     gpio_setPin(RS);
     gpio_setPin(RD);
     gpio_clearPin(WR);
-//     (val & 0x01) ? gpio_setPin(D0) : gpio_clearPin(D0);
-//     (val & 0x02) ? gpio_setPin(D1) : gpio_clearPin(D1);
-//     (val & 0x04) ? gpio_setPin(D2) : gpio_clearPin(D2);
-//     (val & 0x08) ? gpio_setPin(D3) : gpio_clearPin(D3);
-//     (val & 0x10) ? gpio_setPin(D4) : gpio_clearPin(D4);
-//     (val & 0x20) ? gpio_setPin(D5) : gpio_clearPin(D5);
-//     (val & 0x40) ? gpio_setPin(D6) : gpio_clearPin(D6);
-//     (val & 0x80) ? gpio_setPin(D7) : gpio_clearPin(D7);
     setDataLines(val);
     uDelay(100);
     gpio_setPin(WR);
@@ -218,9 +206,36 @@ static uint8_t lcd_readReg(uint8_t reg)
 
 void lcd_init()
 {
-    /* Turn on backlight */
-    gpio_setMode(GPIOC, 6, OUTPUT);
-    gpio_setPin(GPIOC, 6);
+    /* Allocate framebuffer, two bytes per pixel */
+    frameBuffer = (uint16_t *) malloc(SCREEN_WIDTH * SCREEN_HEIGTH * 2);
+    if(frameBuffer == NULL)
+    {
+        printf("*** LCD ERROR: cannot allocate framebuffer! ***");
+        return;
+    }
+
+    /*
+     * Configure TIM8 for backlight PWM: Fpwm = 100kHz, 8 bit of resolution
+     * APB2 freq. is 84MHz, then: PSC = 327 to have Ftick = 256.097kHz
+     * With ARR = 256, Fpwm is 100kHz;
+     */
+    RCC->APB2ENR |= RCC_APB2ENR_TIM8EN;
+    TIM8->ARR = 255;
+    TIM8->PSC = 327;
+    TIM8->CNT = 0;
+    TIM8->CR1   |= TIM_CR1_ARPE;    /* LCD backlight is on PC6, TIM8-CH1 */
+    TIM8->CCMR1 |= TIM_CCMR1_OC1M_2
+                | TIM_CCMR1_OC1M_1
+                | TIM_CCMR1_OC1PE;
+    TIM8->CCER  |= TIM_CCER_CC1E;
+    TIM8->BDTR  |= TIM_BDTR_MOE;
+    TIM8->CCR1 = 0;
+    TIM8->EGR  = TIM_EGR_UG;        /* Update registers */
+    TIM8->CR1 |= TIM_CR1_CEN;       /* Start timer */
+
+    /* Configure GPIO, TIM8 is on AF3 */
+    gpio_setMode(GPIOC, 6, ALTERNATE);
+    gpio_setAlternateFunction(GPIOC, 6, 3);
 
     gpio_setMode(D0, OUTPUT);
     gpio_setMode(D1, OUTPUT);
@@ -310,6 +325,20 @@ void lcd_init()
     gpio_clearPin(CS);
     lcd_readReg(CMD_RDDIDIF);
     gpio_setPin(CS);
+}
+
+void lcd_terminate()
+{
+    /* Shut off backlight and deallocate framebuffer */
+    gpio_setMode(GPIOC, 6, OUTPUT);
+    gpio_clearPin(GPIOC, 6);
+    RCC->APB2ENR &= ~RCC_APB2ENR_TIM8EN;
+    if(frameBuffer != NULL) free(frameBuffer);
+}
+
+void lcd_setBacklightLevel(uint8_t level)
+{
+    TIM8->CCR1 = level;
 }
 
 void lcd_render()
