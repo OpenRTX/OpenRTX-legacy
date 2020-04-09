@@ -141,26 +141,32 @@ static uint8_t getDataLines()
     return val;
 }
 
-static void writeCmd(uint8_t cmd)
-{
-    gpio_clearPin(RS);
-    gpio_setPin(RD);
-    gpio_clearPin(WR);
-    setDataLines(cmd);
-    uDelay(100);
-    gpio_setPin(WR);
-    uDelay(100);
-}
+#define LCD_FSMC_ADDR_COMMAND 0x60000000
+#define LCD_FSMC_ADDR_DATA    0x60040000
 
-static void writeData(uint8_t val)
+__attribute__ ((noinline)) static void writeCmd(uint8_t cmd)
 {
-    gpio_setPin(RS);
-    gpio_setPin(RD);
-    gpio_clearPin(WR);
-    setDataLines(val);
-    uDelay(100);
-    gpio_setPin(WR);
-    uDelay(100);
+    *(volatile uint8_t*)LCD_FSMC_ADDR_COMMAND = cmd;
+
+//     gpio_clearPin(RS);
+//     gpio_setPin(RD);
+//     gpio_clearPin(WR);
+//     setDataLines(cmd);
+//     uDelay(100);
+//     gpio_setPin(WR);
+//     uDelay(100);
+}
+__attribute__ ((noinline)) static void writeData(uint8_t val)
+{
+    *(volatile uint8_t*)LCD_FSMC_ADDR_DATA = val;
+
+//     gpio_setPin(RS);
+//     gpio_setPin(RD);
+//     gpio_clearPin(WR);
+//     setDataLines(val);
+//     uDelay(100);
+//     gpio_setPin(WR);
+//     uDelay(100);
 }
 
 static uint8_t lcd_readReg(uint8_t reg)
@@ -255,9 +261,10 @@ void lcd_init()
      * - MBNEN     = 1: enable bank
      */
     RCC->AHB3ENR |= RCC_AHB3ENR_FSMCEN;
-    FSMC_Bank1->BTCR[0] = FSMC_BCR1_EXTMOD
-                        | FSMC_BCR1_WREN
-                        | FSMC_BCR1_MBKEN;
+    FSMC_Bank1->BTCR[0] = 0x145b;
+                        //= FSMC_BCR1_EXTMOD
+                        //| FSMC_BCR1_WREN
+                        //| FSMC_BCR1_MBKEN;
 
     /* BTR1 config:
      * - ACCMOD  = 1: access mode B
@@ -269,18 +276,18 @@ void lcd_init()
      * - ADDSET  = 1: address setup time 3*HCLK_period = 17.85ns
      */
     FSMC_Bank1->BTCR[1] = (1 << 28) /* ACCMOD */
-                        | (2 << 20) /* CLKDIV */
-                        | (9 << 16) /* BUSTURN */
-                        | (3 << 8)  /* DATAST */
-                        | (1 << 4)  /* ADDHLD */
-                        | 3;        /* ADDSET */
+                        | (5 << 20) /* CLKDIV */
+                        | (0 << 16) /* BUSTURN */
+                        | (5 << 8)  /* DATAST */
+                        | (7 << 4)  /* ADDHLD */
+                        | 7;        /* ADDSET */
 
-    /* For BWTR set the same values as per BTR1 */
-    FSMC_Bank1E->BWTR[0] = (1 << 28) /* ACCMOD */
-                         | (9 << 16) /* BUSTURN */
-                         | (3 << 8)  /* DATAST */
-                         | (1 << 4)  /* ADDHLD */
-                         | 3;        /* ADDSET */ 
+//     /* For BWTR set the same values as per BTR1 */
+//     FSMC_Bank1E->BWTR[0] = (1 << 28) /* ACCMOD */
+//                          | (9 << 16) /* BUSTURN */
+//                          | (3 << 8)  /* DATAST */
+//                          | (1 << 4)  /* ADDHLD */
+//                          | 3;        /* ADDSET */ 
 
     gpio_setMode(D0, OUTPUT);
     gpio_setMode(D1, OUTPUT);
@@ -316,24 +323,46 @@ void lcd_init()
     uDelay(20000);
     gpio_setPin(RST);   /* Exit from reset */
 
-    gpio_setMode(D0, OUTPUT);
-    gpio_setMode(D1, OUTPUT);
-    gpio_setMode(D2, OUTPUT);
-    gpio_setMode(D3, OUTPUT);
-    gpio_setMode(D4, OUTPUT);
-    gpio_setMode(D5, OUTPUT);
-    gpio_setMode(D6, OUTPUT);
-    gpio_setMode(D7, OUTPUT);
+//     gpio_setMode(D0, OUTPUT);
+//     gpio_setMode(D1, OUTPUT);
+//     gpio_setMode(D2, OUTPUT);
+//     gpio_setMode(D3, OUTPUT);
+//     gpio_setMode(D4, OUTPUT);
+//     gpio_setMode(D5, OUTPUT);
+//     gpio_setMode(D6, OUTPUT);
+//     gpio_setMode(D7, OUTPUT);
+// 
+//     gpio_clearPin(D0);
+//     gpio_clearPin(D1);
+//     gpio_clearPin(D2);
+//     gpio_clearPin(D3);
+//     gpio_clearPin(D4);
+//     gpio_clearPin(D5);
+//     gpio_clearPin(D6);
+//     gpio_clearPin(D7);
 
-    gpio_clearPin(D0);
-    gpio_clearPin(D1);
-    gpio_clearPin(D2);
-    gpio_clearPin(D3);
-    gpio_clearPin(D4);
-    gpio_clearPin(D5);
-    gpio_clearPin(D6);
-    gpio_clearPin(D7);
+    gpio_setMode(D0, ALTERNATE);
+    gpio_setMode(D1, ALTERNATE);
+    gpio_setMode(D2, ALTERNATE);
+    gpio_setMode(D3, ALTERNATE);
+    gpio_setMode(D4, ALTERNATE);
+    gpio_setMode(D5, ALTERNATE);
+    gpio_setMode(D6, ALTERNATE);
+    gpio_setMode(D7, ALTERNATE);
+    gpio_setMode(WR, ALTERNATE);
+    gpio_setMode(RD, ALTERNATE);
 
+    gpio_setAlternateFunction(D0, 12);
+    gpio_setAlternateFunction(D1, 12);
+    gpio_setAlternateFunction(D2, 12);
+    gpio_setAlternateFunction(D3, 12);
+    gpio_setAlternateFunction(D4, 12);
+    gpio_setAlternateFunction(D5, 12);
+    gpio_setAlternateFunction(D6, 12);
+    gpio_setAlternateFunction(D7, 12);
+    gpio_setAlternateFunction(WR, 12);
+    gpio_setAlternateFunction(RD, 12);
+    
     gpio_clearPin(CS);
     writeCmd(CMD_SLPOUT);
     uDelay(120*1000);
@@ -389,41 +418,41 @@ void lcd_setBacklightLevel(uint8_t level)
 void lcd_render()
 {
     gpio_clearPin(CS);
-    gpio_setMode(D0, OUTPUT);
-    gpio_setMode(D1, OUTPUT);
-    gpio_setMode(D2, OUTPUT);
-    gpio_setMode(D3, OUTPUT);
-    gpio_setMode(D4, OUTPUT);
-    gpio_setMode(D5, OUTPUT);
-    gpio_setMode(D6, OUTPUT);
-    gpio_setMode(D7, OUTPUT);
-    gpio_setMode(WR, OUTPUT);
-    gpio_setMode(RD, OUTPUT);
+//     gpio_setMode(D0, OUTPUT);
+//     gpio_setMode(D1, OUTPUT);
+//     gpio_setMode(D2, OUTPUT);
+//     gpio_setMode(D3, OUTPUT);
+//     gpio_setMode(D4, OUTPUT);
+//     gpio_setMode(D5, OUTPUT);
+//     gpio_setMode(D6, OUTPUT);
+//     gpio_setMode(D7, OUTPUT);
+//     gpio_setMode(WR, OUTPUT);
+//     gpio_setMode(RD, OUTPUT);
 
     writeCmd(CMD_RAMWR);
 
     /* Now try writing to framebuffer using FSMC peripheral */
-    gpio_setMode(D0, ALTERNATE);
-    gpio_setMode(D1, ALTERNATE);
-    gpio_setMode(D2, ALTERNATE);
-    gpio_setMode(D3, ALTERNATE);
-    gpio_setMode(D4, ALTERNATE);
-    gpio_setMode(D5, ALTERNATE);
-    gpio_setMode(D6, ALTERNATE);
-    gpio_setMode(D7, ALTERNATE);
-    gpio_setMode(WR, ALTERNATE);
-    gpio_setMode(RD, ALTERNATE);
-
-    gpio_setAlternateFunction(D0, 12);
-    gpio_setAlternateFunction(D1, 12);
-    gpio_setAlternateFunction(D2, 12);
-    gpio_setAlternateFunction(D3, 12);
-    gpio_setAlternateFunction(D4, 12);
-    gpio_setAlternateFunction(D5, 12);
-    gpio_setAlternateFunction(D6, 12);
-    gpio_setAlternateFunction(D7, 12);
-    gpio_setAlternateFunction(WR, 12);
-    gpio_setAlternateFunction(RD, 12);
+//     gpio_setMode(D0, ALTERNATE);
+//     gpio_setMode(D1, ALTERNATE);
+//     gpio_setMode(D2, ALTERNATE);
+//     gpio_setMode(D3, ALTERNATE);
+//     gpio_setMode(D4, ALTERNATE);
+//     gpio_setMode(D5, ALTERNATE);
+//     gpio_setMode(D6, ALTERNATE);
+//     gpio_setMode(D7, ALTERNATE);
+//     gpio_setMode(WR, ALTERNATE);
+//     gpio_setMode(RD, ALTERNATE);
+// 
+//     gpio_setAlternateFunction(D0, 12);
+//     gpio_setAlternateFunction(D1, 12);
+//     gpio_setAlternateFunction(D2, 12);
+//     gpio_setAlternateFunction(D3, 12);
+//     gpio_setAlternateFunction(D4, 12);
+//     gpio_setAlternateFunction(D5, 12);
+//     gpio_setAlternateFunction(D6, 12);
+//     gpio_setAlternateFunction(D7, 12);
+//     gpio_setAlternateFunction(WR, 12);
+//     gpio_setAlternateFunction(RD, 12);
 
     
     for(uint8_t r = 0; r < 128; r++)
