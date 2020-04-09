@@ -231,8 +231,8 @@ void lcd_init()
     TIM8->CNT = 0;
     TIM8->CR1   |= TIM_CR1_ARPE;    /* LCD backlight is on PC6, TIM8-CH1 */
     TIM8->CCMR1 |= TIM_CCMR1_OC1M_2
-                | TIM_CCMR1_OC1M_1
-                | TIM_CCMR1_OC1PE;
+                |  TIM_CCMR1_OC1M_1
+                |  TIM_CCMR1_OC1PE;
     TIM8->CCER  |= TIM_CCER_CC1E;
     TIM8->BDTR  |= TIM_BDTR_MOE;
     TIM8->CCR1 = 0;
@@ -254,32 +254,33 @@ void lcd_init()
      * - WRAPMOD   = 0: direct wrapped burst disabled
      * - WAITPOL   = 0: nwait active low
      * - BURSTEN   = 0: burst mode disabled
-     * - FACCEN    = 0: NOR flash memory disabled
-     * - MWID      = 0: 8 bit external memory device
-     * - MTYP      = 0: SRAM
+     * - FACCEN    = 1: NOR flash memory disabled
+     * - MWID      = 1: 16 bit external memory device
+     * - MTYP      = 2: NOR
      * - MUXEN     = 0: addr/data not multiplexed
      * - MBNEN     = 1: enable bank
      */
     RCC->AHB3ENR |= RCC_AHB3ENR_FSMCEN;
-    FSMC_Bank1->BTCR[0] = 0x145b;
+    FSMC_Bank1->BTCR[0] = 0x10D9;
                         //= FSMC_BCR1_EXTMOD
                         //| FSMC_BCR1_WREN
                         //| FSMC_BCR1_MBKEN;
 
     /* BTR1 config:
-     * - ACCMOD  = 1: access mode B
+     * - ACCMOD  = 0: access mode A
      * - DATLAT  = 0: don't care in asynchronous mode
-     * - CLKDIV  = 2: FSMC_CLK period = 3xHCLK period -> 3*5.95ns = 17.85ns
-     * - BUSTURN = 9: time between two consecutive write accesses: (1 + 2 + BUSTURN)*HCLK_period = 71.4ns > twc (66ns)
+     * - CLKDIV  = 1: don't care in asynchronous mode, 0000 is reserved
+     * - BUSTURN = 0: time between two consecutive write accesses: (1 + 2 + BUSTURN)*HCLK_period = 71.4ns > twc (66ns)
      * - DATAST  = 3: we must have LCD twrl < DATAST*HCLK_period: 15ns < 3*5.95 = 17.85ns
-     * - ADDHLD  = 1: used only in mode D
+     * - ADDHLD  = 1: used only in mode D, 0000 is reserved
      * - ADDSET  = 1: address setup time 3*HCLK_period = 17.85ns
      */
-    FSMC_Bank1->BTCR[1] = (1 << 28) /* ACCMOD */
-                        | (5 << 20) /* CLKDIV */
+    FSMC_Bank1->BTCR[1] = (0 << 28) /* ACCMOD */
+                        | (0 << 24) /* DATLAT */
+                        | (1 << 20) /* CLKDIV */
                         | (0 << 16) /* BUSTURN */
                         | (5 << 8)  /* DATAST */
-                        | (7 << 4)  /* ADDHLD */
+                        | (1 << 4)  /* ADDHLD */
                         | 7;        /* ADDSET */
 
 //     /* For BWTR set the same values as per BTR1 */
@@ -288,40 +289,6 @@ void lcd_init()
 //                          | (3 << 8)  /* DATAST */
 //                          | (1 << 4)  /* ADDHLD */
 //                          | 3;        /* ADDSET */ 
-
-    gpio_setMode(D0, OUTPUT);
-    gpio_setMode(D1, OUTPUT);
-    gpio_setMode(D2, OUTPUT);
-    gpio_setMode(D3, OUTPUT);
-    gpio_setMode(D4, OUTPUT);
-    gpio_setMode(D5, OUTPUT);
-    gpio_setMode(D6, OUTPUT);
-    gpio_setMode(D7, OUTPUT);
-
-    gpio_clearPin(D0);
-    gpio_clearPin(D1);
-    gpio_clearPin(D2);
-    gpio_clearPin(D3);
-    gpio_clearPin(D4);
-    gpio_clearPin(D5);
-    gpio_clearPin(D6);
-    gpio_clearPin(D7);
-
-    gpio_setMode(WR,  OUTPUT);
-    gpio_setMode(RD,  OUTPUT);
-    gpio_setMode(CS,  OUTPUT);
-    gpio_setMode(RS,  OUTPUT);
-    gpio_setMode(RST, OUTPUT);
-
-    gpio_setPin(WR);    /* Idle state is high level, for these */
-    gpio_setPin(RD);
-    gpio_setPin(CS);
-    gpio_setPin(RS);
-
-    gpio_clearPin(RST); /* Put LCD in reset mode */
-
-    uDelay(20000);
-    gpio_setPin(RST);   /* Exit from reset */
 
 //     gpio_setMode(D0, OUTPUT);
 //     gpio_setMode(D1, OUTPUT);
@@ -340,6 +307,22 @@ void lcd_init()
 //     gpio_clearPin(D5);
 //     gpio_clearPin(D6);
 //     gpio_clearPin(D7);
+// 
+//     gpio_setMode(WR,  OUTPUT);
+//     gpio_setMode(RD,  OUTPUT);
+    gpio_setMode(CS,  OUTPUT);
+//     gpio_setMode(RS,  OUTPUT);
+    gpio_setMode(RST, OUTPUT);
+
+//     gpio_setPin(WR);    /* Idle state is high level, for these */
+//     gpio_setPin(RD);
+    gpio_setPin(CS);
+//     gpio_setPin(RS);
+
+    gpio_clearPin(RST); /* Put LCD in reset mode */
+
+    uDelay(20000);
+    gpio_setPin(RST);   /* Exit from reset */
 
     gpio_setMode(D0, ALTERNATE);
     gpio_setMode(D1, ALTERNATE);
@@ -349,6 +332,7 @@ void lcd_init()
     gpio_setMode(D5, ALTERNATE);
     gpio_setMode(D6, ALTERNATE);
     gpio_setMode(D7, ALTERNATE);
+    gpio_setMode(RS, ALTERNATE);
     gpio_setMode(WR, ALTERNATE);
     gpio_setMode(RD, ALTERNATE);
 
@@ -360,6 +344,7 @@ void lcd_init()
     gpio_setAlternateFunction(D5, 12);
     gpio_setAlternateFunction(D6, 12);
     gpio_setAlternateFunction(D7, 12);
+    gpio_setAlternateFunction(RS, 12);
     gpio_setAlternateFunction(WR, 12);
     gpio_setAlternateFunction(RD, 12);
     
