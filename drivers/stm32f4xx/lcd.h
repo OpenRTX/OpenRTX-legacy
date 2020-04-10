@@ -35,6 +35,24 @@
  * Low level driver for Tytera MD380 display, which is has an HX8302-A controller.
  * Actually, no datasheet for the display controller exists on the internet,
  * however a compatible chip, for which datasheet exists, is the HX8353-E.
+ *
+ *********************** HOW TO MANAGE FRAMEBUFFER *****************************
+ *
+ * This driver allocates the framebuffer as a block of memory addressed linearly
+ * as an array of SCREEN_HEIGTH*SCREEN_WIDTH 16-bit variables.
+ * With respect to it, screen is indexed in this way:
+ *
+ *   (0,0)
+ *     +-------> x
+ *     |
+ *     |    o (X,Y)
+ *     |
+ *     v
+ *     y
+ *
+ * then to set the value of the pixel having coordinates (X,Y), framebuffer has
+ * to be indexed in this way buf[X + Y*SCREEN_WIDTH].
+ *
  */
 
 #define SCREEN_WIDTH 160
