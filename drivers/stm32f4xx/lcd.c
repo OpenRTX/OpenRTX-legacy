@@ -288,7 +288,10 @@ void lcd_render()
     {
         for(uint8_t y = 0; y < SCREEN_HEIGTH; y++)
         {
-            frameBuffer[x+y*SCREEN_WIDTH] = (y % 4) ? 0xF800 : 0x001F;
+            frameBuffer[x+y*SCREEN_WIDTH] = 0xF800;
+            if((y % 2) == 0) frameBuffer[x+y*SCREEN_WIDTH] = 0x07E0;
+            if((y % 3) == 0) frameBuffer[x+y*SCREEN_WIDTH] = 0x001F;
+            if((y % 4) == 0) frameBuffer[x+y*SCREEN_WIDTH] = 0xFFFF;
         }
     }
 
