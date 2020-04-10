@@ -225,12 +225,12 @@ void lcd_init()
     writeData(0x00);
     writeData(0x00);
     writeData(0x00);
-    writeData(0x80);    /* 160 coloumns */
+    writeData(0x80);    /* 128 coloumns */
     writeCmd(CMD_RASET);
     writeData(0x00);
     writeData(0x00);
     writeData(0x00);
-    writeData(0xA0);    /* 128 coloumns */
+    writeData(0xA0);    /* 160 rows */
 //     writeCmd(CMD_SETPWCTR);
 //     writeData(0x0A);
 //     writeData(0x14);
@@ -288,22 +288,15 @@ void lcd_render()
     {
         for(uint8_t c = 0; c < 160; c++)
         {
-            uint16_t col = 0;
-            if(r < 43)
-            {
-                col = 0xF800;
-            }
-            else if((r > 43) & (r < 86))
-            {
-                col = 0x07E0;
-            }
-            else
-            {
-                col = 0x001F;
-            }
+            frameBuffer[c + r*160] = (c % 2) ? 0xF800 : 0x001F;
+        }
+    }
 
-            writeData(col & 0xFF);
-            writeData(col >> 8);
+    for(size_t p = 0; p < 160*128; p++)
+    {
+            uint16_t pix = frameBuffer[p];
+            writeData(pix & 0xFF);
+            writeData(pix >> 8);
         }
     }
     gpio_setPin(CS);
