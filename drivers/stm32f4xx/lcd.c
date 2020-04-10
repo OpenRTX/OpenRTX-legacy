@@ -110,7 +110,7 @@ static uint16_t *frameBuffer;
 
 static inline void writeCmd(uint8_t cmd)
 {
-    /* 
+    /*
      * HACK: to make things faster, we control GPIOs writing directly to the
      * control registers.
      */
@@ -118,16 +118,17 @@ static inline void writeCmd(uint8_t cmd)
     GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
     GPIOD->BSRRL = (1 << 4);              /* Set RD */
     uint16_t x = cmd;
-    GPIOD->BSRRL = ((x << 14) & 0xC000) /* Set D0, D1 */
-                 | ((x >> 2) & 0x0003); /* D2, D3 */
-    GPIOE->BSRRL = (x << 3) & 0x0780;   /* Set D4, D5, D6, D7 */
-    delayUs(1);
+    GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
+                 | ((x >> 2) & 0x0003);   /* D2, D3 */
+    GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
+    delayUs(10);
     GPIOE->BSRRL = (1 << 5);              /* Set WR line */
-    delayUs(1);
+    delayUs(10);
 }
+
 static inline void writeData(uint8_t val)
 {
-    /* 
+    /*
      * HACK: to make things faster, we control GPIOs writing directly to the
      * control registers.
      */
@@ -135,12 +136,12 @@ static inline void writeData(uint8_t val)
     GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
     GPIOD->BSRRL = (1 << 12) | (1 << 4);  /* Set RD and RS */
     uint16_t x = val;
-    GPIOD->BSRRL = ((x << 14) & 0xC000) /* Set D0, D1 */
-                 | ((x >> 2) & 0x0003); /* D2, D3 */
-    GPIOE->BSRRL = (x << 3) & 0x0780;   /* Set D4, D5, D6, D7 */
-    delayUs(1);
+    GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
+                 | ((x >> 2) & 0x0003);   /* D2, D3 */
+    GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
+    delayUs(10);
     GPIOE->BSRRL = (1 << 5);              /* Set WR line */
-    delayUs(1);
+    delayUs(10);
 }
 
 void lcd_init()
