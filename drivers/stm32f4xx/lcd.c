@@ -121,9 +121,9 @@ static inline void writeCmd(uint8_t cmd)
     GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
                  | ((x >> 2) & 0x0003);   /* D2, D3 */
     GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
-    delayUs(1);
+    delayUs(10);
     GPIOD->BSRRL = (1 << 5);              /* Set WR line */
-    delayUs(1);
+    delayUs(10);
 }
 
 static inline void writeData(uint8_t val)
@@ -139,9 +139,9 @@ static inline void writeData(uint8_t val)
     GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
                  | ((x >> 2) & 0x0003);   /* D2, D3 */
     GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
-    delayUs(1);
+    delayUs(10);
     GPIOD->BSRRL = (1 << 5);              /* Set WR line */
-    delayUs(1);
+    delayUs(10);
 }
 
 void lcd_init()
