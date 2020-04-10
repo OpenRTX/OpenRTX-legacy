@@ -284,11 +284,11 @@ void lcd_render()
 
     writeCmd(CMD_RAMWR);
 
-    for(uint8_t r = 0; r < 128; r++)
+    for(uint8_t x = 0; x < SCREEN_WIDTH; x++)
     {
-        for(uint8_t c = 0; c < 160; c++)
+        for(uint8_t y = 0; y < SCREEN_HEIGTH; y++)
         {
-            frameBuffer[r + c*128] = (c % 2) ? 0xF800 : 0x001F;
+            frameBuffer[x+y*SCREEN_WIDTH] = (y % 4) ? 0xF800 : 0x001F;
         }
     }
 
