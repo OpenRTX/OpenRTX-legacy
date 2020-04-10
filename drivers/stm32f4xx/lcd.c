@@ -219,18 +219,18 @@ void lcd_init()
     delayMs(120);
 //     writeCmd(CMD_GAMSET);
 //     writeData(0x04);
-    writeCmd(CMD_MADCTL);
+    writeCmd(CMD_MADCTL); /**/
     writeData(0x22);
     writeCmd(CMD_CASET);
     writeData(0x00);
     writeData(0x00);
     writeData(0x00);
-    writeData(0xA0);    /* 128 coloumns */
+    writeData(0xA0);    /* 160 coloumns */
     writeCmd(CMD_RASET);
     writeData(0x00);
     writeData(0x00);
     writeData(0x00);
-    writeData(0x80);    /* 160 rows */
+    writeData(0x80);    /* 128 rows */
 //     writeCmd(CMD_SETPWCTR);
 //     writeData(0x0A);
 //     writeData(0x14);
@@ -286,13 +286,11 @@ void lcd_render()
 
     for(uint8_t x = 0; x < SCREEN_WIDTH; x++)
     {
-        for(uint8_t y = 0; y < SCREEN_HEIGTH; y++)
-        {
-            frameBuffer[x+y*SCREEN_WIDTH] = 0xF800;
-            if((y % 2) == 0) frameBuffer[x+y*SCREEN_WIDTH] = 0x07E0;
-            if((y % 3) == 0) frameBuffer[x+y*SCREEN_WIDTH] = 0x001F;
-            if((y % 4) == 0) frameBuffer[x+y*SCREEN_WIDTH] = 0xFFFF;
-        }
+        uint8_t y = 0;
+        for(; y < SCREEN_HEIGTH/4; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0xF800;
+        for(; y < SCREEN_HEIGTH/2; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0x07E0;
+        for(; y < (3*SCREEN_HEIGTH)/4; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0x001F;
+        for(; y < SCREEN_HEIGTH; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0xFFFF;
     }
 
     for(size_t p = 0; p < 160*128; p++)
