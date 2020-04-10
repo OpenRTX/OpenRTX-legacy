@@ -220,17 +220,17 @@ void lcd_init()
 //     writeCmd(CMD_GAMSET);
 //     writeData(0x04);
     writeCmd(CMD_MADCTL);
-    writeData(0x22);
+    writeData(0x02);
     writeCmd(CMD_CASET);
     writeData(0x00);
     writeData(0x00);
     writeData(0x00);
-    writeData(0xA0);    /* 160 coloumns */
+    writeData(0x80);    /* 160 coloumns */
     writeCmd(CMD_RASET);
     writeData(0x00);
     writeData(0x00);
     writeData(0x00);
-    writeData(0x80);    /* 128 coloumns */
+    writeData(0xA0);    /* 128 coloumns */
 //     writeCmd(CMD_SETPWCTR);
 //     writeData(0x0A);
 //     writeData(0x14);
