@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include "gpio.h"
 #include "lcd.h"
+#include "delays.h"
 
 /* Really ugly but useful defines */
 #define D0  GPIOD,14
@@ -107,40 +108,6 @@
 // Pixel format is RGB565, 16 bit per pixel
 static uint16_t *frameBuffer;
 
-static void uDelay (const uint32_t usec)
-{
-    uint32_t count = 0;
-    const uint32_t utime = (120 * usec / 7);
-
-    do
-    {
-        if( ++count > utime )
-        {
-            return ;
-        }
-    } while (1);
-}
-
-// static inline void setDataLines(uint8_t x)
-// {
-//     /* Clear all data lines */
-//     GPIOD->BSRRH = 0xC003;
-//     GPIOE->BSRRH = 0x0780;
-// 
-//     uint16_t xx = x;
-//     GPIOD->BSRRL = ((xx << 14) & 0xC000) | ((xx >> 2) & 0x0003);
-//     GPIOE->BSRRL = (xx << 3) & 0x0780;
-// }
-// 
-// static inline uint8_t getDataLines()
-// {
-//     uint8_t val = 0;
-//     val = (GPIOE->IDR & 0x0780) >> 3;       /* High nibble */
-//     val |= ((GPIOE->IDR & 0xC000) >> 14)    /* Low nibble */
-//         |  ((GPIOE->IDR & 0x0003) << 2);
-//     return val;
-// }
-
 static inline void writeCmd(uint8_t cmd)
 {
     /* 
@@ -150,12 +117,13 @@ static inline void writeCmd(uint8_t cmd)
     GPIOD->BSRRH = 0xD023;                /* Clear D0, D1, D2, D3, WR, RS */
     GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
     GPIOD->BSRRL = (1 << 4);              /* Set RD */
-    GPIOD->BSRRL = ((cmd << 14) & 0xC000) /* Set D0, D1 */
-                 | ((cmd >> 2) & 0x0003); /* D2, D3 */
-    GPIOE->BSRRL = (cmd << 3) & 0x0780;   /* Set D4, D5, D6, D7 */
-    uDelay(1);
+    uint16_t x = cmd;
+    GPIOD->BSRRL = ((x << 14) & 0xC000) /* Set D0, D1 */
+                 | ((x >> 2) & 0x0003); /* D2, D3 */
+    GPIOE->BSRRL = (x << 3) & 0x0780;   /* Set D4, D5, D6, D7 */
+    delayUs(1);
     GPIOE->BSRRL = (1 << 5);              /* Set WR line */
-    uDelay(1);
+    delayUs(1);
 }
 static inline void writeData(uint8_t val)
 {
@@ -166,54 +134,14 @@ static inline void writeData(uint8_t val)
     GPIOD->BSRRH = 0xC023;                /* Clear D0, D1, D2, D3, WR */
     GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
     GPIOD->BSRRL = (1 << 12) | (1 << 4);  /* Set RD and RS */
-    GPIOD->BSRRL = ((val << 14) & 0xC000) /* Set D0, D1 */
-                 | ((val >> 2) & 0x0003); /* D2, D3 */
-    GPIOE->BSRRL = (val << 3) & 0x0780;   /* Set D4, D5, D6, D7 */
-    uDelay(1);
+    uint16_t x = val;
+    GPIOD->BSRRL = ((x << 14) & 0xC000) /* Set D0, D1 */
+                 | ((x >> 2) & 0x0003); /* D2, D3 */
+    GPIOE->BSRRL = (x << 3) & 0x0780;   /* Set D4, D5, D6, D7 */
+    delayUs(1);
     GPIOE->BSRRL = (1 << 5);              /* Set WR line */
-    uDelay(1);
+    delayUs(1);
 }
-
-// static uint8_t lcd_readReg(uint8_t reg)
-// {
-//     writeCmd(reg);
-// 
-//     gpio_clearPin(RD);
-//     gpio_setPin(RS);
-// 
-//     gpio_setMode(D0, INPUT);
-//     gpio_setMode(D1, INPUT);
-//     gpio_setMode(D2, INPUT);
-//     gpio_setMode(D3, INPUT);
-//     gpio_setMode(D4, INPUT);
-//     gpio_setMode(D5, INPUT);
-//     gpio_setMode(D6, INPUT);
-//     gpio_setMode(D7, INPUT);
-// 
-//     uDelay(100);
-//     gpio_setPin(RD);
-//     uDelay(100);
-//     uint8_t dummy = getDataLines();
-// 
-//     gpio_clearPin(RD);
-//     uDelay(100);
-//     gpio_setPin(RD);
-//     uDelay(100);
-//     uint8_t value = getDataLines();
-// 
-//     gpio_setMode(D0, OUTPUT);
-//     gpio_setMode(D1, OUTPUT);
-//     gpio_setMode(D2, OUTPUT);
-//     gpio_setMode(D3, OUTPUT);
-//     gpio_setMode(D4, OUTPUT);
-//     gpio_setMode(D5, OUTPUT);
-//     gpio_setMode(D6, OUTPUT);
-//     gpio_setMode(D7, OUTPUT);
-// 
-//     printf("Dummy %d, value %d\r\n", dummy, value);
-// 
-//     return 0;
-// }
 
 void lcd_init()
 {
@@ -279,13 +207,13 @@ void lcd_init()
 
     gpio_clearPin(RST); /* Put LCD in reset mode */
 
-    uDelay(20000);
+    delayMs(20);
     gpio_setPin(RST);   /* Exit from reset */
 
     /* Configure LCD controller */
     gpio_clearPin(CS);
     writeCmd(CMD_SLPOUT);
-    uDelay(120*1000);
+    delayMs(120);
     writeCmd(CMD_GAMSET);
     writeData(0x04);
     writeCmd(CMD_SETPWCTR);
@@ -296,7 +224,7 @@ void lcd_init()
     writeData(0x00);
     writeCmd(CMD_COLMOD);
     writeData(0x05);
-    uDelay(10*1000);
+    delayMs(10);
 //     writeCmd(CMD_CASET);
 //     writeData(0x00);
 //     writeData(0x00);
@@ -308,9 +236,9 @@ void lcd_init()
 //     writeData(0x00);
 //     writeData(0x79);
     writeCmd(CMD_NORON);
-    uDelay(10*1000);
+    delayMs(10);
     writeCmd(CMD_DISPON);
-    uDelay(120*1000);
+    delayMs(120);
     writeCmd(CMD_RAMWR);
 
     gpio_setPin(CS);
