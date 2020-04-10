@@ -46,6 +46,9 @@ int main (void)
     xTaskCreate(green_main, "grn", 256, NULL, 1, NULL);
     xTaskCreate(red_main, "red", 256, NULL, 0, NULL);
     vTaskStartScheduler();
+    
+    printf("Welcome to OpenDMR v0.1 compiled for the MD380\n\r");
+    printf("             Viva il DMR libero!              \n\r");
 
     for(;;);
 }

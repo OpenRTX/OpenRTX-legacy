@@ -32,7 +32,7 @@ endif
 ##
 ## List here your source files (both .s, .c and .cpp)
 ##
-SRC := source/testsuites/malloc_test.c
+SRC := source/main.c
 #source/main.c source/io/keyboard.c source/interfaces/pit.c
 
 ##
