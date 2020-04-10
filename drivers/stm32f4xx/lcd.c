@@ -220,17 +220,17 @@ void lcd_init()
 //     writeCmd(CMD_GAMSET);
 //     writeData(0x04);
     writeCmd(CMD_MADCTL);
-    writeData(0x02);
+    writeData(0x22);
     writeCmd(CMD_CASET);
     writeData(0x00);
     writeData(0x00);
     writeData(0x00);
-    writeData(0x80);    /* 128 coloumns */
+    writeData(0xA0);    /* 128 coloumns */
     writeCmd(CMD_RASET);
     writeData(0x00);
     writeData(0x00);
     writeData(0x00);
-    writeData(0xA0);    /* 160 rows */
+    writeData(0x80);    /* 160 rows */
 //     writeCmd(CMD_SETPWCTR);
 //     writeData(0x0A);
 //     writeData(0x14);
@@ -288,7 +288,7 @@ void lcd_render()
     {
         for(uint8_t c = 0; c < 160; c++)
         {
-            frameBuffer[c + r*160] = (c % 2) ? 0xF800 : 0x001F;
+            frameBuffer[r + c*128] = (c % 2) ? 0xF800 : 0x001F;
         }
     }
 
@@ -297,7 +297,6 @@ void lcd_render()
             uint16_t pix = frameBuffer[p];
             writeData(pix & 0xFF);
             writeData(pix >> 8);
-        }
     }
     gpio_setPin(CS);
 }
