@@ -31,15 +31,54 @@
 #include <stdint.h>
 #include "stm32f4xx.h"
 
+/**
+ * Low level driver for Tytera MD380 display, which is has an HX8302-A controller.
+ * Actually, no datasheet for the display controller exists on the internet,
+ * however a compatible chip, for which datasheet exists, is the HX8353-E.
+ */
+
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGTH 128
 
+/**
+ * This function initialises the display, configures TIM8 for backlight control
+ * and allocates framebuffer on the heap. After initialisation, backlight is
+ * set to zero.
+ * NOTE: framebuffer allocation is the first operation performed, if fails an
+ * error message is printed on the virtual COM port and this function returns
+ * prematurely, without configuring the display and the backlight timer. Thus, a
+ * dark screen can be symptom of failed allocation.
+ */
 void lcd_init();
 
+/**
+ * When called, this function turns off backlight, shuts down TIM8 and
+ * deallocates the framebuffer.
+ */
 void lcd_terminate();
 
+/**
+ * Set screen backlight to a given level.
+ * @param level: backlight level, from 0 (backlight off) to 255 (backlight at
+ * full brightness).
+ */
 void lcd_setBacklightLevel(uint8_t level);
 
+/**
+ * Copy framebuffer content to the display internal buffer. To be called
+ * whenever there is need to update the display.
+ */
 void lcd_render();
+
+/**
+ * Get pointer to framebuffer. This buffer is addressed linearly and each
+ * location is a pixel whose color coding is RGB565.
+ * Changes to the framebuffer will not be reflected on the display until
+ * lcd_render() is called.
+ * WARNING: no bound check is performed! Do not call free() on the pointer
+ * returned, doing so will destroy the framebuffer!
+ * @return pointer to framebuffer.
+ */
+uint16_t *lcd_getFrameBuffer();
 
 #endif /* LCH_H */

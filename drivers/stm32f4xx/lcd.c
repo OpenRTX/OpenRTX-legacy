@@ -148,13 +148,13 @@ static inline void writeData(uint8_t val)
 
 void lcd_init()
 {
-    /* Allocate framebuffer, two bytes per pixel 
+    /* Allocate framebuffer, two bytes per pixel */
     frameBuffer = (uint16_t *) malloc(SCREEN_WIDTH * SCREEN_HEIGTH * 2);
     if(frameBuffer == NULL)
     {
         printf("*** LCD ERROR: cannot allocate framebuffer! ***");
         return;
-    } */
+    }
 
     /*
      * Configure TIM8 for backlight PWM: Fpwm = 100kHz, 8 bit of resolution
@@ -217,22 +217,29 @@ void lcd_init()
     gpio_clearPin(CS);
     writeCmd(CMD_SLPOUT);
     delayMs(120);
-    writeCmd(CMD_GAMSET);
-    writeData(0x04);
-    writeCmd(CMD_SETPWCTR);
-    writeData(0x0A);
-    writeData(0x14);
-    writeCmd(CMD_SETSTBA);
-    writeData(0x0A);
+//     writeCmd(CMD_GAMSET);
+//     writeData(0x04);
+    writeCmd(CMD_MADCTL);
+    writeData(0x22);
+    writeCmd(CMD_CASET);
     writeData(0x00);
+    writeData(0x00);
+    writeData(0x00);
+    writeData(0xA0);    /* 160 coloumns */
+    writeCmd(CMD_RASET);
+    writeData(0x00);
+    writeData(0x00);
+    writeData(0x00);
+    writeData(0x80);    /* 128 coloumns */
+//     writeCmd(CMD_SETPWCTR);
+//     writeData(0x0A);
+//     writeData(0x14);
+//     writeCmd(CMD_SETSTBA);
+//     writeData(0x0A);
+//     writeData(0x00);
     writeCmd(CMD_COLMOD);
-    writeData(0x05);
+    writeData(0x05);    /* 16 bit per pixel */
     delayMs(10);
-//     writeCmd(CMD_CASET);
-//     writeData(0x00);
-//     writeData(0x00);
-//     writeData(0x00);
-//     writeData(0x9E);
 //     writeCmd(CMD_RASET);
 //     writeData(0x00);
 //     writeData(0x00);
@@ -281,7 +288,22 @@ void lcd_render()
     {
         for(uint8_t c = 0; c < 160; c++)
         {
-            writeData(r^c);
+            uint16_t col = 0;
+            if(r < 43)
+            {
+                col = 0xF800;
+            }
+            else if((r > 43) & (r < 86))
+            {
+                col = 0x07E0;
+            }
+            else
+            {
+                col = 0x001F;
+            }
+
+            writeData(col & 0xFF);
+            writeData(col >> 8);
         }
     }
     gpio_setPin(CS);
