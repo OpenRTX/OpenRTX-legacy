@@ -121,9 +121,9 @@ static inline void writeCmd(uint8_t cmd)
     GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
                  | ((x >> 2) & 0x0003);   /* D2, D3 */
     GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
-    delayUs(10);
+    delayUs(100);
     GPIOE->BSRRL = (1 << 5);              /* Set WR line */
-    delayUs(10);
+    delayUs(100);
 }
 
 static inline void writeData(uint8_t val)
@@ -139,20 +139,20 @@ static inline void writeData(uint8_t val)
     GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
                  | ((x >> 2) & 0x0003);   /* D2, D3 */
     GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
-    delayUs(10);
+    delayUs(100);
     GPIOE->BSRRL = (1 << 5);              /* Set WR line */
-    delayUs(10);
+    delayUs(100);
 }
 
 void lcd_init()
 {
-    /* Allocate framebuffer, two bytes per pixel */
+    /* Allocate framebuffer, two bytes per pixel 
     frameBuffer = (uint16_t *) malloc(SCREEN_WIDTH * SCREEN_HEIGTH * 2);
     if(frameBuffer == NULL)
     {
         printf("*** LCD ERROR: cannot allocate framebuffer! ***");
         return;
-    }
+    } */
 
     /*
      * Configure TIM8 for backlight PWM: Fpwm = 100kHz, 8 bit of resolution
