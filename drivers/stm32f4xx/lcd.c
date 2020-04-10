@@ -104,6 +104,8 @@
 #define CMD_SET_SPI_RDEN 0xfe // Set SPI Read address (and enable)
 #define CMD_GET_SPI_RDEN 0xff // Get FE A[7:0] parameter
 
+#define LCD_DELAY_US 30
+
 // LCD framebuffer, allocated on the heap by lcd_init().
 // Pixel format is RGB565, 16 bit per pixel
 static uint16_t *frameBuffer;
@@ -121,9 +123,9 @@ static inline void writeCmd(uint8_t cmd)
     GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
                  | ((x >> 2) & 0x0003);   /* D2, D3 */
     GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
-    delayUs(10);
+    delayUs(LCD_DELAY_US);
     GPIOD->BSRRL = (1 << 5);              /* Set WR line */
-    delayUs(10);
+    delayUs(LCD_DELAY_US);
 }
 
 static inline void writeData(uint8_t val)
@@ -139,9 +141,9 @@ static inline void writeData(uint8_t val)
     GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
                  | ((x >> 2) & 0x0003);   /* D2, D3 */
     GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
-    delayUs(10);
+    delayUs(LCD_DELAY_US);
     GPIOD->BSRRL = (1 << 5);              /* Set WR line */
-    delayUs(10);
+    delayUs(LCD_DELAY_US);
 }
 
 void lcd_init()
