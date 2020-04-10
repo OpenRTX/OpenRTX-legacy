@@ -219,32 +219,28 @@ void lcd_init()
     delayMs(120);
 //     writeCmd(CMD_GAMSET);
 //     writeData(0x04);
-    writeCmd(CMD_MADCTL); /**/
-    writeData(0x22);
+    writeCmd(CMD_MADCTL); /* Reverse mode, refresh screen top-to-bottom and */
+    writeData(0x20);      /* left-to-right, use RGB color ordering          */
     writeCmd(CMD_CASET);
     writeData(0x00);
     writeData(0x00);
     writeData(0x00);
-    writeData(0xA0);    /* 160 coloumns */
+    writeData(0xA0);      /* 160 coloumns */
     writeCmd(CMD_RASET);
     writeData(0x00);
     writeData(0x00);
     writeData(0x00);
-    writeData(0x80);    /* 128 rows */
-//     writeCmd(CMD_SETPWCTR);
+    writeData(0x80);      /* 128 rows */
+    writeCmd(CMD_COLMOD);
+    writeData(0x05);      /* 16 bit per pixel */
+  //     writeCmd(CMD_SETPWCTR);
 //     writeData(0x0A);
 //     writeData(0x14);
 //     writeCmd(CMD_SETSTBA);
 //     writeData(0x0A);
-//     writeData(0x00);
-    writeCmd(CMD_COLMOD);
-    writeData(0x05);    /* 16 bit per pixel */
+//     writeData(0x00); 
     delayMs(10);
-//     writeCmd(CMD_RASET);
-//     writeData(0x00);
-//     writeData(0x00);
-//     writeData(0x00);
-//     writeData(0x79);
+
     writeCmd(CMD_NORON);
     delayMs(10);
     writeCmd(CMD_DISPON);
@@ -287,17 +283,17 @@ void lcd_render()
     for(uint8_t x = 0; x < SCREEN_WIDTH; x++)
     {
         uint8_t y = 0;
-        for(; y < SCREEN_HEIGTH/4; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0xF800;
-        for(; y < SCREEN_HEIGTH/2; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0x07E0;
-        for(; y < (3*SCREEN_HEIGTH)/4; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0x001F;
-        for(; y < SCREEN_HEIGTH; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0xFFFF;
+        for(; y < SCREEN_HEIGTH/4; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0xF800;     /* RED */
+        for(; y < SCREEN_HEIGTH/2; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0x07E0;     /* GREEN */
+        for(; y < (3*SCREEN_HEIGTH)/4; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0x001F; /* BLUE */
+        for(; y < SCREEN_HEIGTH; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0xFFFF;       /* WHITE */
     }
 
     for(size_t p = 0; p < 160*128; p++)
     {
             uint16_t pix = frameBuffer[p];
-            writeData(pix & 0xFF);
             writeData(pix >> 8);
+            writeData(pix & 0xFF);
     }
     gpio_setPin(CS);
 }
