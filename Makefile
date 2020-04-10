@@ -54,6 +54,7 @@ drivers/stm32f4xx/usb/usbd_req.c      \
 drivers/stm32f4xx/usb/usbd_usr.c      \
 drivers/stm32f4xx/gpio.c              \
 drivers/stm32f4xx/usb_vcom.c          \
+drivers/stm32f4xx/delays.c            \
 drivers/stm32f4xx/lcd.c
 endif
 
