@@ -91,7 +91,7 @@
 #define CMD_SETOSC       0xb0 // Set internal oscillator
 #define CMD_SETPWCTR     0xb1 // Set power control
 #define CMD_SETDISPLAY   0xb2 // Set display control
-#define CMD_SETCYC       0xb4 // Set dispaly cycle
+#define CMD_SETCYC       0xb4 // Set display cycle
 #define CMD_SETBGP       0xb5 // Set BGP voltage
 #define CMD_SETVCOM      0xb6 // Set VCOM voltage
 #define CMD_SETEXTC      0xb9 // Enter extension command
@@ -106,8 +106,10 @@
 
 #define LCD_DELAY_US 30
 
-// LCD framebuffer, allocated on the heap by lcd_init().
-// Pixel format is RGB565, 16 bit per pixel
+/*
+ * LCD framebuffer, allocated on the heap by lcd_init().
+ * Pixel format is RGB565, 16 bit per pixel
+ */
 static uint16_t *frameBuffer;
 
 static inline void writeCmd(uint8_t cmd)
@@ -175,10 +177,11 @@ void lcd_init()
     TIM8->EGR  = TIM_EGR_UG;        /* Update registers */
     TIM8->CR1 |= TIM_CR1_CEN;       /* Start timer */
 
-    /* Configure GPIO, TIM8 is on AF3 */
+    /* Configure backlight GPIO, TIM8 is on AF3 */
     gpio_setMode(GPIOC, 6, ALTERNATE);
     gpio_setAlternateFunction(GPIOC, 6, 3);
 
+    /* Configure display GPIOs */
     gpio_setMode(D0, OUTPUT);
     gpio_setMode(D1, OUTPUT);
     gpio_setMode(D2, OUTPUT);
@@ -217,10 +220,26 @@ void lcd_init()
     gpio_clearPin(CS);
     writeCmd(CMD_SLPOUT);
     delayMs(120);
-//     writeCmd(CMD_GAMSET);
-//     writeData(0x04);
-    writeCmd(CMD_MADCTL); /* Reverse mode, refresh screen top-to-bottom and */
-    writeData(0x20);      /* left-to-right, use RGB color ordering          */
+
+    /*
+     * Configuring screen's memory access control: TYT MD380 has the screen
+     * rotated by 90° degrees, so we have to exgange row and coloumn indexing.
+     * Moreover, we need to invert the vertical updating order to avoid painting
+     * an image from bottom to top (that is, horizontally mirrored)
+     *
+     * Current confguration:
+     * - MY  (bit 7): 0 -> do not invert y direction
+     * - MX  (bit 6): 1 -> invert x direction
+     * - MV  (bit 5): 1 -> exchange x and y
+     * - ML  (bit 4): 0 -> refresh screen top-to-bottom
+     * - BGR (bit 3): 0 -> RGB pixel format
+     * - SS  (bit 2): 0 -> refresh screen left-to-right
+     * - bit 1 and 0: don't care
+     */
+
+    writeCmd(CMD_MADCTL);
+    writeData(0x60);
+
     writeCmd(CMD_CASET);
     writeData(0x00);
     writeData(0x00);
@@ -233,15 +252,9 @@ void lcd_init()
     writeData(0x80);      /* 128 rows */
     writeCmd(CMD_COLMOD);
     writeData(0x05);      /* 16 bit per pixel */
-  //     writeCmd(CMD_SETPWCTR);
-//     writeData(0x0A);
-//     writeData(0x14);
-//     writeCmd(CMD_SETSTBA);
-//     writeData(0x0A);
-//     writeData(0x00); 
     delayMs(10);
 
-    writeCmd(CMD_NORON);
+    writeCmd(CMD_NORON);  /* Finally, turn on display */
     delayMs(10);
     writeCmd(CMD_DISPON);
     delayMs(120);
@@ -280,15 +293,6 @@ void lcd_render()
 
     writeCmd(CMD_RAMWR);
 
-    for(uint8_t x = 0; x < SCREEN_WIDTH; x++)
-    {
-        uint8_t y = 0;
-        for(; y < SCREEN_HEIGTH/4; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0xF800;     /* RED */
-        for(; y < SCREEN_HEIGTH/2; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0x07E0;     /* GREEN */
-        for(; y < (3*SCREEN_HEIGTH)/4; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0x001F; /* BLUE */
-        for(; y < SCREEN_HEIGTH; y++) frameBuffer[x+y*SCREEN_WIDTH] = 0xFFFF;       /* WHITE */
-    }
-
     for(size_t p = 0; p < 160*128; p++)
     {
             uint16_t pix = frameBuffer[p];
@@ -296,4 +300,9 @@ void lcd_render()
             writeData(pix & 0xFF);
     }
     gpio_setPin(CS);
+}
+
+uint16_t *lcd_getFrameBuffer()
+{
+    return frameBuffer;
 }

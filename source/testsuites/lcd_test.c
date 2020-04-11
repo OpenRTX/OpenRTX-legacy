@@ -38,6 +38,35 @@ void blink(void *arg)
 {
     lcd_init();
     lcd_setBacklightLevel(254);
+    uint16_t *buf = lcd_getFrameBuffer();
+
+    /* All screen white */
+    for(uint8_t x = 0; x < SCREEN_WIDTH; x++)
+    {
+        for(uint8_t y = 0; y < SCREEN_HEIGTH; y++)
+        {
+            buf[x+y*SCREEN_WIDTH] = 0xFFFF;     /* WHITE */
+        }
+    }
+
+    /* Horizontal red line */
+    for(uint8_t x = 0; x < SCREEN_WIDTH; x++)
+    {
+        for(uint8_t y = 40; y < 60; y++)
+        {
+            buf[x+y*SCREEN_WIDTH] = 0xF800;     /* RED */
+        }
+    }
+
+    /* Vertical blue line */
+    for(uint8_t x = 40; x < 60; x++)
+    {
+        for(uint8_t y = 0; y < SCREEN_HEIGTH; y++)
+        {
+            buf[x+y*SCREEN_WIDTH] = 0x001F;     /* BLUE */
+        }
+    }
+
 
     while(1)
     {
