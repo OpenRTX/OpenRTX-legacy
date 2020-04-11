@@ -52,14 +52,14 @@ void blink(void *arg)
     /* Horizontal red line */
     for(uint8_t x = 0; x < SCREEN_WIDTH; x++)
     {
-        for(uint8_t y = 40; y < 60; y++)
+        for(uint8_t y = 10; y < 30; y++)
         {
             buf[x+y*SCREEN_WIDTH] = 0xF800;     /* RED */
         }
     }
 
     /* Vertical blue line */
-    for(uint8_t x = 40; x < 60; x++)
+    for(uint8_t x = 10; x < 30; x++)
     {
         for(uint8_t y = 0; y < SCREEN_HEIGTH; y++)
         {

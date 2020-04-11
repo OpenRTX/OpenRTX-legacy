@@ -225,7 +225,9 @@ void lcd_init()
      * Configuring screen's memory access control: TYT MD380 has the screen
      * rotated by 90° degrees, so we have to exgange row and coloumn indexing.
      * Moreover, we need to invert the vertical updating order to avoid painting
-     * an image from bottom to top (that is, horizontally mirrored)
+     * an image from bottom to top (that is, horizontally mirrored).
+     * For reference see, in HX8353-E datasheet, MADCTL description at page 149
+     * and paragraph 6.2.1, starting at page 48.
      *
      * Current confguration:
      * - MY  (bit 7): 0 -> do not invert y direction
@@ -279,7 +281,11 @@ void lcd_setBacklightLevel(uint8_t level)
 
 void lcd_render()
 {
-    gpio_clearPin(CS);
+
+    /*
+     * Put screen data lines back to output mode, since they are in common with
+     * keyboard buttons and the keyboard driver sets them as inputs.
+     */
     gpio_setMode(D0, OUTPUT);
     gpio_setMode(D1, OUTPUT);
     gpio_setMode(D2, OUTPUT);
@@ -288,17 +294,49 @@ void lcd_render()
     gpio_setMode(D5, OUTPUT);
     gpio_setMode(D6, OUTPUT);
     gpio_setMode(D7, OUTPUT);
-    gpio_setMode(WR, OUTPUT);
-    gpio_setMode(RD, OUTPUT);
 
+    gpio_clearPin(CS);
     writeCmd(CMD_RAMWR);
+
+    /*
+     * Copying data from framebuffer to screen buffer. When using the 8-bit bus
+     * interface, display expects values in order R-G-B, while in framebuffer
+     * data is stored with blue component in the low 5 bits. Thus, we have to
+     * send the high byte followed by the low one.
+     * See also HX8353-E datasheed, at page 27.
+     *
+     * Also, to make things faster, we bypass the GPIO driver and write directly
+     * into the GPIO control registers
+     */
+
+    GPIOD->BSRRL = (1 << 12) | (1 << 4);  /* Set RD and RS */
 
     for(size_t p = 0; p < 160*128; p++)
     {
-            uint16_t pix = frameBuffer[p];
-            writeData(pix >> 8);
-            writeData(pix & 0xFF);
+            uint16_t rg = (frameBuffer[p] >> 8) & 0xFF; /* red and half green  */
+            uint16_t gb = frameBuffer[p] & 0xFF;        /* half green and blue */
+
+            /* Send red and half green */
+            GPIOD->BSRRH = 0xC023;                /* Clear D0, D1, D2, D3, WR */
+            GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
+            GPIOD->BSRRL = ((rg << 14) & 0xC000)  /* Set D0, D1 */
+                         | ((rg >> 2) & 0x0003);  /* D2, D3 */
+            GPIOE->BSRRL = (rg << 3) & 0x0780;    /* Set D4, D5, D6, D7 */
+            delayUs(LCD_DELAY_US);
+            GPIOD->BSRRL = (1 << 5);              /* Set WR line */
+            delayUs(LCD_DELAY_US);
+
+            /* Send remaining half green and blue */
+            GPIOD->BSRRH = 0xC023;                /* Clear D0, D1, D2, D3, WR */
+            GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
+            GPIOD->BSRRL = ((gb << 14) & 0xC000)  /* Set D0, D1 */
+                         | ((gb >> 2) & 0x0003);  /* D2, D3 */
+            GPIOE->BSRRL = (gb << 3) & 0x0780;    /* Set D4, D5, D6, D7 */
+            delayUs(LCD_DELAY_US);
+            GPIOD->BSRRL = (1 << 5);              /* Set WR line */
+            delayUs(LCD_DELAY_US);
     }
+
     gpio_setPin(CS);
 }
 
