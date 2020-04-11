@@ -219,16 +219,84 @@ void lcd_init()
     delayMs(20);
     gpio_setPin(RST);   /* Exit from reset */
 
-    /* Configure LCD controller */
     gpio_clearPin(CS);
-    writeCmd(CMD_SLPOUT);
-    delayMs(120);
-    writeCmd(CMD_NORON);
-    delayMs(10);
-    writeCmd(CMD_SETEXTC);
-    writeCmd(CMD_SETOSC);
-    writeData(0x34);      /* 50Hz in idle mode and 60Hz normal mode */
-    writeData(0x01);      /* Enable oscillator */
+//     writeCmd(CMD_COLMOD);
+//     writeData(5);
+
+//     writeCmd(CMD_MADCTL);
+    //  writeData(8);
+//     writeData(0x48);
+
+    writeCmd(CMD_SET_SPI_RDEN);
+    writeCmd(0xef);
+    writeCmd(CMD_SETCYC);
+    writeData(0);
+    writeCmd(CMD_GET_SPI_RDEN);
+    writeData(0x16);
+
+    writeCmd(0xfd);
+    // writeData(0x40);
+    writeData(0x4f);
+
+    writeCmd(0xa4);
+    writeData(0x70);
+    writeCmd(0xe7);
+    writeData(0x94);
+    writeData(0x88);
+    writeCmd(0xea);
+    writeData(0x3a);
+    writeCmd(0xed);
+    writeData(0x11);
+    writeCmd(0xe4);
+    writeData(0xc5);
+    writeCmd(0xe2);
+    writeData(0x80);
+    writeCmd(0xa3);
+    writeData(0x12);
+    writeCmd(0xe3);
+    writeData(7);
+    writeCmd(0xe5);
+    writeData(0x10);
+    writeCmd(0xf0);
+    writeData(0);
+    writeCmd(0xf1);
+    writeData(0x55);
+    writeCmd(0xf2);
+    writeData(5);
+    writeCmd(0xf3);
+    writeData(0x53);
+    writeCmd(0xf4);
+    writeData(0);
+    writeCmd(0xf5);
+    writeData(0);
+    writeCmd(0xf7);
+    writeData(0x27);
+    writeCmd(0xf8);
+    writeData(0x22);
+    writeCmd(0xf9);
+    writeData(0x77);
+    writeCmd(0xfa);
+    writeData(0x35);
+    writeCmd(0xfb);
+    writeData(0);
+    writeCmd(0xfc);
+    writeData(0);
+    writeCmd(CMD_SET_SPI_RDEN);
+    writeCmd(0xef);
+    writeCmd(0xe9);
+    writeData(0);
+    delayMs(20);
+
+    /* Configure LCD controller */
+//     gpio_clearPin(CS);
+//     writeCmd(CMD_SLPOUT);
+//     delayMs(120);
+//     writeCmd(CMD_NORON);
+//     delayMs(10);
+//     writeCmd(CMD_SETEXTC);
+//     writeCmd(CMD_SETOSC);
+//     writeData(0x34);      /* 50Hz in idle mode and 60Hz normal mode */
+//     writeData(0x01);      /* Enable oscillator */
 
     /*
      * Configuring screen's memory access control: TYT MD380 has the screen
@@ -265,8 +333,13 @@ void lcd_init()
     writeData(0x05);      /* 16 bit per pixel */
     delayMs(10);
 
-    writeCmd(CMD_DISPON); /* Finally, turn on display */
+//     writeCmd(CMD_DISPON); /* Finally, turn on display */
+//     delayMs(120);
+//     writeCmd(CMD_RAMWR);
+
+    writeCmd(CMD_SLPOUT);
     delayMs(120);
+    writeCmd(CMD_DISPON);
     writeCmd(CMD_RAMWR);
 
     gpio_setPin(CS);
