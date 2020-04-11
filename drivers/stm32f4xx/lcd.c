@@ -223,6 +223,12 @@ void lcd_init()
     gpio_clearPin(CS);
     writeCmd(CMD_SLPOUT);
     delayMs(120);
+    writeCmd(CMD_NORON);
+    delayMs(10);
+    writeCmd(CMD_SETEXTC);
+    writeCmd(CMD_SETOSC);
+    writeData(0x34);      /* 50Hz in idle mode and 60Hz normal mode */
+    writeData(0x01);      /* Enable oscillator */
 
     /*
      * Configuring screen's memory access control: TYT MD380 has the screen
@@ -259,9 +265,7 @@ void lcd_init()
     writeData(0x05);      /* 16 bit per pixel */
     delayMs(10);
 
-    writeCmd(CMD_NORON);  /* Finally, turn on display */
-    delayMs(10);
-    writeCmd(CMD_DISPON);
+    writeCmd(CMD_DISPON); /* Finally, turn on display */
     delayMs(120);
     writeCmd(CMD_RAMWR);
 
@@ -316,28 +320,28 @@ void lcd_render()
 
     for(size_t p = 0; p < 160*128; p++)
     {
-            uint16_t rg = (frameBuffer[p] >> 8) & 0xFF; /* red and half green  */
-            uint16_t gb = frameBuffer[p] & 0xFF;        /* half green and blue */
+        uint16_t rg = (frameBuffer[p] >> 8) & 0xFF; /* red and half green  */
+        uint16_t gb = frameBuffer[p] & 0xFF;        /* half green and blue */
 
-            /* Send red and half green */
-            GPIOD->BSRRH = 0xC023;                /* Clear D0, D1, D2, D3, WR */
-            GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
-            GPIOD->BSRRL = ((rg << 14) & 0xC000)  /* Set D0, D1 */
-                         | ((rg >> 2) & 0x0003);  /* D2, D3 */
-            GPIOE->BSRRL = (rg << 3) & 0x0780;    /* Set D4, D5, D6, D7 */
-            delayUs(RENDER_WR_SETUP_DELAY);
-            GPIOD->BSRRL = (1 << 5);              /* Set WR line */
-            delayUs(RENDER_NEXT_BYTE_DELAY);
+        /* Send red and half green */
+        GPIOD->BSRRH = 0xC023;                      /* Clear D0, D1, D2, D3, WR */
+        GPIOE->BSRRH = 0x0780;                      /* Clear D4, D5, D6, D7 */
+        GPIOD->BSRRL = ((rg << 14) & 0xC000)        /* Set D0, D1 */
+                        | ((rg >> 2) & 0x0003);     /* D2, D3 */
+        GPIOE->BSRRL = (rg << 3) & 0x0780;          /* Set D4, D5, D6, D7 */
+        delayUs(RENDER_WR_SETUP_DELAY);
+        GPIOD->BSRRL = (1 << 5);                    /* Set WR line */
+        delayUs(RENDER_NEXT_BYTE_DELAY);
 
-            /* Send remaining half green and blue */
-            GPIOD->BSRRH = 0xC023;                /* Clear D0, D1, D2, D3, WR */
-            GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
-            GPIOD->BSRRL = ((gb << 14) & 0xC000)  /* Set D0, D1 */
-                         | ((gb >> 2) & 0x0003);  /* D2, D3 */
-            GPIOE->BSRRL = (gb << 3) & 0x0780;    /* Set D4, D5, D6, D7 */
-            delayUs(RENDER_WR_SETUP_DELAY);
-            GPIOD->BSRRL = (1 << 5);              /* Set WR line */
-            delayUs(RENDER_NEXT_BYTE_DELAY);
+        /* Send remaining half green and blue */
+        GPIOD->BSRRH = 0xC023;                      /* Clear D0, D1, D2, D3, WR */
+        GPIOE->BSRRH = 0x0780;                      /* Clear D4, D5, D6, D7 */
+        GPIOD->BSRRL = ((gb << 14) & 0xC000)        /* Set D0, D1 */
+                        | ((gb >> 2) & 0x0003);     /* D2, D3 */
+        GPIOE->BSRRL = (gb << 3) & 0x0780;          /* Set D4, D5, D6, D7 */
+        delayUs(RENDER_WR_SETUP_DELAY);
+        GPIOD->BSRRL = (1 << 5);                    /* Set WR line */
+        delayUs(RENDER_NEXT_BYTE_DELAY);
     }
 
     gpio_setPin(CS);
