@@ -120,38 +120,40 @@ static uint16_t *frameBuffer;
 
 static inline void writeCmd(uint8_t cmd)
 {
-    /*
-     * HACK: to make things faster, we control GPIOs writing directly to the
-     * control registers.
-     */
-    GPIOD->BSRRL = (1 << 4);              /* Set RD */
-    GPIOD->BSRRH = 0xD023;                /* Clear D0, D1, D2, D3, WR, RS */
-    GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
-    uint16_t x = cmd;
-    GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
-                 | ((x >> 2) & 0x0003);   /* D2, D3 */
-    GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
-    delayUs(LCD_DELAY_US);
-    GPIOD->BSRRL = (1 << 5);              /* Set WR line */
-    delayUs(LCD_DELAY_US);
+    *(volatile uint8_t*)LCD_FSMC_ADDR_COMMAND = cmd;
+//     /*
+//      * HACK: to make things faster, we control GPIOs writing directly to the
+//      * control registers.
+//      */
+//     GPIOD->BSRRL = (1 << 4);              /* Set RD */
+//     GPIOD->BSRRH = 0xD023;                /* Clear D0, D1, D2, D3, WR, RS */
+//     GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
+//     uint16_t x = cmd;
+//     GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
+//                  | ((x >> 2) & 0x0003);   /* D2, D3 */
+//     GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
+//     delayUs(LCD_DELAY_US);
+//     GPIOD->BSRRL = (1 << 5);              /* Set WR line */
+//     delayUs(LCD_DELAY_US);
 }
 
 static inline void writeData(uint8_t val)
 {
-    /*
-     * HACK: to make things faster, we control GPIOs writing directly to the
-     * control registers.
-     */
-    GPIOD->BSRRL = (1 << 12) | (1 << 4);  /* Set RD and RS */
-    GPIOD->BSRRH = 0xC023;                /* Clear D0, D1, D2, D3, WR */
-    GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
-    uint16_t x = val;
-    GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
-                 | ((x >> 2) & 0x0003);   /* D2, D3 */
-    GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
-    delayUs(LCD_DELAY_US);
-    GPIOD->BSRRL = (1 << 5);              /* Set WR line */
-    delayUs(LCD_DELAY_US);
+    *(volatile uint8_t*)LCD_FSMC_ADDR_DATA = val;
+//     /*
+//      * HACK: to make things faster, we control GPIOs writing directly to the
+//      * control registers.
+//      */
+//     GPIOD->BSRRL = (1 << 12) | (1 << 4);  /* Set RD and RS */
+//     GPIOD->BSRRH = 0xC023;                /* Clear D0, D1, D2, D3, WR */
+//     GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
+//     uint16_t x = val;
+//     GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
+//                  | ((x >> 2) & 0x0003);   /* D2, D3 */
+//     GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
+//     delayUs(LCD_DELAY_US);
+//     GPIOD->BSRRL = (1 << 5);              /* Set WR line */
+//     delayUs(LCD_DELAY_US);
 }
 
 void lcd_init()
@@ -188,34 +190,98 @@ void lcd_init()
     gpio_setAlternateFunction(GPIOC, 6, 3);
 
     /* Configure display GPIOs */
-    gpio_setMode(D0, OUTPUT);
-    gpio_setMode(D1, OUTPUT);
-    gpio_setMode(D2, OUTPUT);
-    gpio_setMode(D3, OUTPUT);
-    gpio_setMode(D4, OUTPUT);
-    gpio_setMode(D5, OUTPUT);
-    gpio_setMode(D6, OUTPUT);
-    gpio_setMode(D7, OUTPUT);
+//     gpio_setMode(D0, OUTPUT);
+//     gpio_setMode(D1, OUTPUT);
+//     gpio_setMode(D2, OUTPUT);
+//     gpio_setMode(D3, OUTPUT);
+//     gpio_setMode(D4, OUTPUT);
+//     gpio_setMode(D5, OUTPUT);
+//     gpio_setMode(D6, OUTPUT);
+//     gpio_setMode(D7, OUTPUT);
+// 
+//     gpio_clearPin(D0);
+//     gpio_clearPin(D1);
+//     gpio_clearPin(D2);
+//     gpio_clearPin(D3);
+//     gpio_clearPin(D4);
+//     gpio_clearPin(D5);
+//     gpio_clearPin(D6);
+//     gpio_clearPin(D7);
 
-    gpio_clearPin(D0);
-    gpio_clearPin(D1);
-    gpio_clearPin(D2);
-    gpio_clearPin(D3);
-    gpio_clearPin(D4);
-    gpio_clearPin(D5);
-    gpio_clearPin(D6);
-    gpio_clearPin(D7);
+    /* Configure FSMC as LCD driver.
+     * BCR1 config:
+     * - CBURSTRW  = 0: asynchronous write operation
+     * - ASYNCWAIT = 0: NWAIT not taken into account when running asynchronous protocol
+     * - EXTMOD    = 0: do not take into account values of BWTR register
+     * - WAITEN    = 0: nwait signal disabled
+     * - WREN      = 1: write operations enabled
+     * - WAITCFG   = 0: nwait active one data cycle before wait state
+     * - WRAPMOD   = 0: direct wrapped burst disabled
+     * - WAITPOL   = 0: nwait active low
+     * - BURSTEN   = 0: burst mode disabled
+     * - FACCEN    = 1: NOR flash memory disabled
+     * - MWID      = 1: 16 bit external memory device
+     * - MTYP      = 2: NOR
+     * - MUXEN     = 0: addr/data not multiplexed
+     * - MBNEN     = 1: enable bank
+     */
+    RCC->AHB3ENR |= RCC_AHB3ENR_FSMCEN;
+    FSMC_Bank1->BTCR[0] = 0x10D9;
+                        //= FSMC_BCR1_EXTMOD
+                        //| FSMC_BCR1_WREN
+                        //| FSMC_BCR1_MBKEN;
 
-    gpio_setMode(WR,  OUTPUT);
-    gpio_setMode(RD,  OUTPUT);
+    /* BTR1 config:
+     * - ACCMOD  = 0: access mode A
+     * - DATLAT  = 0: don't care in asynchronous mode
+     * - CLKDIV  = 1: don't care in asynchronous mode, 0000 is reserved
+     * - BUSTURN = 0: time between two consecutive write accesses: (1 + 2 + BUSTURN)*HCLK_period = 71.4ns > twc (66ns)
+     * - DATAST  = 3: we must have LCD twrl < DATAST*HCLK_period: 15ns < 3*5.95 = 17.85ns
+     * - ADDHLD  = 1: used only in mode D, 0000 is reserved
+     * - ADDSET  = 1: address setup time 3*HCLK_period = 17.85ns
+     */
+    FSMC_Bank1->BTCR[1] = (0 << 28) /* ACCMOD */
+                        | (0 << 24) /* DATLAT */
+                        | (1 << 20) /* CLKDIV */
+                        | (0 << 16) /* BUSTURN */
+                        | (5 << 8)  /* DATAST */
+                        | (1 << 4)  /* ADDHLD */
+                        | 7;        /* ADDSET */
+
+    gpio_setMode(D0, ALTERNATE);
+    gpio_setMode(D1, ALTERNATE);
+    gpio_setMode(D2, ALTERNATE);
+    gpio_setMode(D3, ALTERNATE);
+    gpio_setMode(D4, ALTERNATE);
+    gpio_setMode(D5, ALTERNATE);
+    gpio_setMode(D6, ALTERNATE);
+    gpio_setMode(D7, ALTERNATE);
+    gpio_setMode(RS, ALTERNATE);
+    gpio_setMode(WR, ALTERNATE);
+    gpio_setMode(RD, ALTERNATE);
+
+    gpio_setAlternateFunction(D0, 12);
+    gpio_setAlternateFunction(D1, 12);
+    gpio_setAlternateFunction(D2, 12);
+    gpio_setAlternateFunction(D3, 12);
+    gpio_setAlternateFunction(D4, 12);
+    gpio_setAlternateFunction(D5, 12);
+    gpio_setAlternateFunction(D6, 12);
+    gpio_setAlternateFunction(D7, 12);
+    gpio_setAlternateFunction(RS, 12);
+    gpio_setAlternateFunction(WR, 12);
+    gpio_setAlternateFunction(RD, 12);
+
+//     gpio_setMode(WR,  OUTPUT);
+//     gpio_setMode(RD,  OUTPUT);
     gpio_setMode(CS,  OUTPUT);
-    gpio_setMode(RS,  OUTPUT);
+//     gpio_setMode(RS,  OUTPUT);
     gpio_setMode(RST, OUTPUT);
 
-    gpio_setPin(WR);    /* Idle state is high level, for these */
-    gpio_setPin(RD);
+//     gpio_setPin(WR);    /* Idle state is high level, for these */
+//     gpio_setPin(RD);
     gpio_setPin(CS);
-    gpio_setPin(RS);
+//     gpio_setPin(RS);
 
     gpio_clearPin(RST); /* Put LCD in reset mode */
 
@@ -346,70 +412,6 @@ void lcd_init()
     writeCmd(CMD_RAMWR);
 
     gpio_setPin(CS);
-
-    /* Configure FSMC as LCD driver.
-     * BCR1 config:
-     * - CBURSTRW  = 0: asynchronous write operation
-     * - ASYNCWAIT = 0: NWAIT not taken into account when running asynchronous protocol
-     * - EXTMOD    = 0: do not take into account values of BWTR register
-     * - WAITEN    = 0: nwait signal disabled
-     * - WREN      = 1: write operations enabled
-     * - WAITCFG   = 0: nwait active one data cycle before wait state
-     * - WRAPMOD   = 0: direct wrapped burst disabled
-     * - WAITPOL   = 0: nwait active low
-     * - BURSTEN   = 0: burst mode disabled
-     * - FACCEN    = 1: NOR flash memory disabled
-     * - MWID      = 1: 16 bit external memory device
-     * - MTYP      = 2: NOR
-     * - MUXEN     = 0: addr/data not multiplexed
-     * - MBNEN     = 1: enable bank
-     */
-    RCC->AHB3ENR |= RCC_AHB3ENR_FSMCEN;
-    FSMC_Bank1->BTCR[0] = 0x10D9;
-                        //= FSMC_BCR1_EXTMOD
-                        //| FSMC_BCR1_WREN
-                        //| FSMC_BCR1_MBKEN;
-
-    /* BTR1 config:
-     * - ACCMOD  = 0: access mode A
-     * - DATLAT  = 0: don't care in asynchronous mode
-     * - CLKDIV  = 1: don't care in asynchronous mode, 0000 is reserved
-     * - BUSTURN = 0: time between two consecutive write accesses: (1 + 2 + BUSTURN)*HCLK_period = 71.4ns > twc (66ns)
-     * - DATAST  = 3: we must have LCD twrl < DATAST*HCLK_period: 15ns < 3*5.95 = 17.85ns
-     * - ADDHLD  = 1: used only in mode D, 0000 is reserved
-     * - ADDSET  = 1: address setup time 3*HCLK_period = 17.85ns
-     */
-    FSMC_Bank1->BTCR[1] = (0 << 28) /* ACCMOD */
-                        | (0 << 24) /* DATLAT */
-                        | (1 << 20) /* CLKDIV */
-                        | (0 << 16) /* BUSTURN */
-                        | (5 << 8)  /* DATAST */
-                        | (1 << 4)  /* ADDHLD */
-                        | 7;        /* ADDSET */
-
-    gpio_setMode(D0, ALTERNATE);
-    gpio_setMode(D1, ALTERNATE);
-    gpio_setMode(D2, ALTERNATE);
-    gpio_setMode(D3, ALTERNATE);
-    gpio_setMode(D4, ALTERNATE);
-    gpio_setMode(D5, ALTERNATE);
-    gpio_setMode(D6, ALTERNATE);
-    gpio_setMode(D7, ALTERNATE);
-    gpio_setMode(RS, ALTERNATE);
-    gpio_setMode(WR, ALTERNATE);
-    gpio_setMode(RD, ALTERNATE);
-
-    gpio_setAlternateFunction(D0, 12);
-    gpio_setAlternateFunction(D1, 12);
-    gpio_setAlternateFunction(D2, 12);
-    gpio_setAlternateFunction(D3, 12);
-    gpio_setAlternateFunction(D4, 12);
-    gpio_setAlternateFunction(D5, 12);
-    gpio_setAlternateFunction(D6, 12);
-    gpio_setAlternateFunction(D7, 12);
-    gpio_setAlternateFunction(RS, 12);
-    gpio_setAlternateFunction(WR, 12);
-    gpio_setAlternateFunction(RD, 12);
 }
 
 void lcd_terminate()
@@ -443,8 +445,8 @@ void lcd_render()
 //     gpio_setMode(D7, OUTPUT);
 
     gpio_clearPin(CS);
-//     writeCmd(CMD_RAMWR);
-    *(volatile uint8_t*)LCD_FSMC_ADDR_COMMAND = CMD_RAMWR;
+    writeCmd(CMD_RAMWR);
+//     *(volatile uint8_t*)LCD_FSMC_ADDR_COMMAND = CMD_RAMWR;
 
     /*
      * Copying data from framebuffer to screen buffer. When using the 8-bit bus
