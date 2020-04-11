@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2020 by Silvano Seva IU2KWO                             *
+ *   Copyright (C) 2020 by Silvano Seva IU2KWO and Niccolò Izzo IU2KIN     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -32,7 +32,7 @@
 #include "lcd.h"
 #include "delays.h"
 
-/* Really ugly but useful defines */
+/* Defines for GPIO control, really ugly but useful. */
 #define D0  GPIOD,14
 #define D1  GPIOD,15
 #define D2  GPIOD,0
@@ -104,13 +104,9 @@
 #define CMD_SET_SPI_RDEN 0xfe // Set SPI Read address (and enable)
 #define CMD_GET_SPI_RDEN 0xff // Get FE A[7:0] parameter
 
-#define LCD_DELAY_US 30
-
-#define RENDER_WR_SETUP_DELAY 30
-#define RENDER_NEXT_BYTE_DELAY 30
 
 #define LCD_FSMC_ADDR_COMMAND 0x60000000
-#define LCD_FSMC_ADDR_DATA    0x60040000 
+#define LCD_FSMC_ADDR_DATA    0x60040000
 
 /*
  * LCD framebuffer, allocated on the heap by lcd_init().
@@ -118,42 +114,14 @@
  */
 static uint16_t *frameBuffer;
 
-static inline void writeCmd(uint8_t cmd)
+static inline __attribute__((__always_inline__)) void writeCmd(uint8_t cmd)
 {
-    *(volatile uint8_t*)LCD_FSMC_ADDR_COMMAND = cmd;
-//     /*
-//      * HACK: to make things faster, we control GPIOs writing directly to the
-//      * control registers.
-//      */
-//     GPIOD->BSRRL = (1 << 4);              /* Set RD */
-//     GPIOD->BSRRH = 0xD023;                /* Clear D0, D1, D2, D3, WR, RS */
-//     GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
-//     uint16_t x = cmd;
-//     GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
-//                  | ((x >> 2) & 0x0003);   /* D2, D3 */
-//     GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
-//     delayUs(LCD_DELAY_US);
-//     GPIOD->BSRRL = (1 << 5);              /* Set WR line */
-//     delayUs(LCD_DELAY_US);
+    *(volatile uint8_t*) LCD_FSMC_ADDR_COMMAND = cmd;
 }
 
-static inline void writeData(uint8_t val)
+static inline __attribute__((__always_inline__)) void writeData(uint8_t val)
 {
-    *(volatile uint8_t*)LCD_FSMC_ADDR_DATA = val;
-//     /*
-//      * HACK: to make things faster, we control GPIOs writing directly to the
-//      * control registers.
-//      */
-//     GPIOD->BSRRL = (1 << 12) | (1 << 4);  /* Set RD and RS */
-//     GPIOD->BSRRH = 0xC023;                /* Clear D0, D1, D2, D3, WR */
-//     GPIOE->BSRRH = 0x0780;                /* Clear D4, D5, D6, D7 */
-//     uint16_t x = val;
-//     GPIOD->BSRRL = ((x << 14) & 0xC000)   /* Set D0, D1 */
-//                  | ((x >> 2) & 0x0003);   /* D2, D3 */
-//     GPIOE->BSRRL = (x << 3) & 0x0780;     /* Set D4, D5, D6, D7 */
-//     delayUs(LCD_DELAY_US);
-//     GPIOD->BSRRL = (1 << 5);              /* Set WR line */
-//     delayUs(LCD_DELAY_US);
+    *((volatile uint8_t*) LCD_FSMC_ADDR_DATA) = val;
 }
 
 void lcd_init()
@@ -189,25 +157,6 @@ void lcd_init()
     gpio_setMode(GPIOC, 6, ALTERNATE);
     gpio_setAlternateFunction(GPIOC, 6, 3);
 
-    /* Configure display GPIOs */
-//     gpio_setMode(D0, OUTPUT);
-//     gpio_setMode(D1, OUTPUT);
-//     gpio_setMode(D2, OUTPUT);
-//     gpio_setMode(D3, OUTPUT);
-//     gpio_setMode(D4, OUTPUT);
-//     gpio_setMode(D5, OUTPUT);
-//     gpio_setMode(D6, OUTPUT);
-//     gpio_setMode(D7, OUTPUT);
-// 
-//     gpio_clearPin(D0);
-//     gpio_clearPin(D1);
-//     gpio_clearPin(D2);
-//     gpio_clearPin(D3);
-//     gpio_clearPin(D4);
-//     gpio_clearPin(D5);
-//     gpio_clearPin(D6);
-//     gpio_clearPin(D7);
-
     /* Configure FSMC as LCD driver.
      * BCR1 config:
      * - CBURSTRW  = 0: asynchronous write operation
@@ -227,18 +176,15 @@ void lcd_init()
      */
     RCC->AHB3ENR |= RCC_AHB3ENR_FSMCEN;
     FSMC_Bank1->BTCR[0] = 0x10D9;
-                        //= FSMC_BCR1_EXTMOD
-                        //| FSMC_BCR1_WREN
-                        //| FSMC_BCR1_MBKEN;
 
     /* BTR1 config:
      * - ACCMOD  = 0: access mode A
      * - DATLAT  = 0: don't care in asynchronous mode
      * - CLKDIV  = 1: don't care in asynchronous mode, 0000 is reserved
-     * - BUSTURN = 0: time between two consecutive write accesses: (1 + 2 + BUSTURN)*HCLK_period = 71.4ns > twc (66ns)
-     * - DATAST  = 3: we must have LCD twrl < DATAST*HCLK_period: 15ns < 3*5.95 = 17.85ns
+     * - BUSTURN = 0: time between two consecutive write accesses
+     * - DATAST  = 5: we must have LCD twrl < DATAST*HCLK_period
      * - ADDHLD  = 1: used only in mode D, 0000 is reserved
-     * - ADDSET  = 1: address setup time 3*HCLK_period = 17.85ns
+     * - ADDSET  = 7: address setup time 7*HCLK_period
      */
     FSMC_Bank1->BTCR[1] = (0 << 28) /* ACCMOD */
                         | (0 << 24) /* DATLAT */
@@ -248,6 +194,7 @@ void lcd_init()
                         | (1 << 4)  /* ADDHLD */
                         | 7;        /* ADDSET */
 
+    /* Configure alternate function for data and control lines. */
     gpio_setMode(D0, ALTERNATE);
     gpio_setMode(D1, ALTERNATE);
     gpio_setMode(D2, ALTERNATE);
@@ -272,41 +219,33 @@ void lcd_init()
     gpio_setAlternateFunction(WR, 12);
     gpio_setAlternateFunction(RD, 12);
 
-//     gpio_setMode(WR,  OUTPUT);
-//     gpio_setMode(RD,  OUTPUT);
+    /* Reset and chip select lines as outputs */
     gpio_setMode(CS,  OUTPUT);
-//     gpio_setMode(RS,  OUTPUT);
     gpio_setMode(RST, OUTPUT);
 
-//     gpio_setPin(WR);    /* Idle state is high level, for these */
-//     gpio_setPin(RD);
-    gpio_setPin(CS);
-//     gpio_setPin(RS);
-
+    gpio_setPin(CS);    /* CS idle state is high level */
     gpio_clearPin(RST); /* Put LCD in reset mode */
 
     delayMs(20);
     gpio_setPin(RST);   /* Exit from reset */
 
     gpio_clearPin(CS);
-//     writeCmd(CMD_COLMOD);
-//     writeData(5);
 
-//     writeCmd(CMD_MADCTL);
-    //  writeData(8);
-//     writeData(0x48);
-
-    writeCmd(CMD_SET_SPI_RDEN);
+    /**
+     * The following command sequence has been taken as-is from Tytera original
+     * firmware. Without it, screen needs framebuffer data to be sent very slowly,
+     * otherwise nothing will be rendered.
+     * Since we do not have the datasheet for the controller employed in this
+     * screen, we can only copy-and-paste...
+     */
+    writeCmd(0xfe);
     writeCmd(0xef);
-    writeCmd(CMD_SETCYC);
-    writeData(0);
-    writeCmd(CMD_GET_SPI_RDEN);
+    writeCmd(0xb4);
+    writeData(0x00);
+    writeCmd(0xff);
     writeData(0x16);
-
     writeCmd(0xfd);
-    // writeData(0x40);
     writeData(0x4f);
-
     writeCmd(0xa4);
     writeData(0x70);
     writeCmd(0xe7);
@@ -323,21 +262,21 @@ void lcd_init()
     writeCmd(0xa3);
     writeData(0x12);
     writeCmd(0xe3);
-    writeData(7);
+    writeData(0x07);
     writeCmd(0xe5);
     writeData(0x10);
     writeCmd(0xf0);
-    writeData(0);
+    writeData(0x00);
     writeCmd(0xf1);
     writeData(0x55);
     writeCmd(0xf2);
-    writeData(5);
+    writeData(0x05);
     writeCmd(0xf3);
     writeData(0x53);
     writeCmd(0xf4);
-    writeData(0);
+    writeData(0x00);
     writeCmd(0xf5);
-    writeData(0);
+    writeData(0x00);
     writeCmd(0xf7);
     writeData(0x27);
     writeCmd(0xf8);
@@ -347,25 +286,16 @@ void lcd_init()
     writeCmd(0xfa);
     writeData(0x35);
     writeCmd(0xfb);
-    writeData(0);
+    writeData(0x00);
     writeCmd(0xfc);
-    writeData(0);
-    writeCmd(CMD_SET_SPI_RDEN);
+    writeData(0x00);
+    writeCmd(0xfe);
     writeCmd(0xef);
     writeCmd(0xe9);
-    writeData(0);
+    writeData(0x00);
     delayMs(20);
 
-    /* Configure LCD controller */
-//     gpio_clearPin(CS);
-//     writeCmd(CMD_SLPOUT);
-//     delayMs(120);
-//     writeCmd(CMD_NORON);
-//     delayMs(10);
-//     writeCmd(CMD_SETEXTC);
-//     writeCmd(CMD_SETOSC);
-//     writeData(0x34);      /* 50Hz in idle mode and 60Hz normal mode */
-//     writeData(0x01);      /* Enable oscillator */
+    /** The registers and commands below are the same in HX8353-E controller **/
 
     /*
      * Configuring screen's memory access control: TYT MD380 has the screen
@@ -384,7 +314,6 @@ void lcd_init()
      * - SS  (bit 2): 0 -> refresh screen left-to-right
      * - bit 1 and 0: don't care
      */
-
     writeCmd(CMD_MADCTL);
     writeData(0x60);
 
@@ -402,11 +331,7 @@ void lcd_init()
     writeData(0x05);      /* 16 bit per pixel */
     delayMs(10);
 
-//     writeCmd(CMD_DISPON); /* Finally, turn on display */
-//     delayMs(120);
-//     writeCmd(CMD_RAMWR);
-
-    writeCmd(CMD_SLPOUT);
+    writeCmd(CMD_SLPOUT); /* Finally, turn on display */
     delayMs(120);
     writeCmd(CMD_DISPON);
     writeCmd(CMD_RAMWR);
@@ -416,11 +341,15 @@ void lcd_init()
 
 void lcd_terminate()
 {
-    /* Shut off backlight and deallocate framebuffer */
+    /* Shut off backlight, FSMC and deallocate framebuffer */
     gpio_setMode(GPIOC, 6, OUTPUT);
     gpio_clearPin(GPIOC, 6);
     RCC->APB2ENR &= ~RCC_APB2ENR_TIM8EN;
-    if(frameBuffer != NULL) free(frameBuffer);
+    RCC->AHB3ENR &= ~RCC_AHB3ENR_FSMCEN;
+    if(frameBuffer != NULL)
+    {
+        free(frameBuffer);
+    }
 }
 
 void lcd_setBacklightLevel(uint8_t level)
@@ -432,21 +361,19 @@ void lcd_render()
 {
 
     /*
-     * Put screen data lines back to output mode, since they are in common with
-     * keyboard buttons and the keyboard driver sets them as inputs.
+     * Put screen data lines back to alternate function mode, since they are in
+     * common with keyboard buttons and the keyboard driver sets them as inputs.
+     * Little HACK: we bypass GPIO API and write directly into GPIO control
+     * registers.
      */
-//     gpio_setMode(D0, OUTPUT);
-//     gpio_setMode(D1, OUTPUT);
-//     gpio_setMode(D2, OUTPUT);
-//     gpio_setMode(D3, OUTPUT);
-//     gpio_setMode(D4, OUTPUT);
-//     gpio_setMode(D5, OUTPUT);
-//     gpio_setMode(D6, OUTPUT);
-//     gpio_setMode(D7, OUTPUT);
+
+    GPIOD->MODER &= ~0xF000000F;    /* Clear old values */
+    GPIOE->MODER &= ~0x3FC000;
+    GPIOD->MODER |= 0xA000000A;     /* Back to AF mode */
+    GPIOE->MODER |= 0x2A8000;
 
     gpio_clearPin(CS);
     writeCmd(CMD_RAMWR);
-//     *(volatile uint8_t*)LCD_FSMC_ADDR_COMMAND = CMD_RAMWR;
 
     /*
      * Copying data from framebuffer to screen buffer. When using the 8-bit bus
@@ -454,40 +381,12 @@ void lcd_render()
      * data is stored with blue component in the low 5 bits. Thus, we have to
      * send the high byte followed by the low one.
      * See also HX8353-E datasheed, at page 27.
-     *
-     * Also, to make things faster, we bypass the GPIO driver and write directly
-     * into the GPIO control registers
      */
-
-    GPIOD->BSRRL = (1 << 12) | (1 << 4);  /* Set RD and RS */
 
     for(size_t p = 0; p < 160*128; p++)
     {
-        uint16_t rg = (frameBuffer[p] >> 8) & 0xFF; /* red and half green  */
-        uint16_t gb = frameBuffer[p] & 0xFF;        /* half green and blue */
-
-        *(volatile uint8_t*)LCD_FSMC_ADDR_DATA = ((uint8_t) rg);
-        *(volatile uint8_t*)LCD_FSMC_ADDR_DATA = ((uint8_t) gb);
-        
-//         /* Send red and half green */
-//         GPIOD->BSRRH = 0xC023;                      /* Clear D0, D1, D2, D3, WR */
-//         GPIOE->BSRRH = 0x0780;                      /* Clear D4, D5, D6, D7 */
-//         GPIOD->BSRRL = ((rg << 14) & 0xC000)        /* Set D0, D1 */
-//                         | ((rg >> 2) & 0x0003);     /* D2, D3 */
-//         GPIOE->BSRRL = (rg << 3) & 0x0780;          /* Set D4, D5, D6, D7 */
-//         delayUs(RENDER_WR_SETUP_DELAY);
-//         GPIOD->BSRRL = (1 << 5);                    /* Set WR line */
-//         delayUs(RENDER_NEXT_BYTE_DELAY);
-// 
-//         /* Send remaining half green and blue */
-//         GPIOD->BSRRH = 0xC023;                      /* Clear D0, D1, D2, D3, WR */
-//         GPIOE->BSRRH = 0x0780;                      /* Clear D4, D5, D6, D7 */
-//         GPIOD->BSRRL = ((gb << 14) & 0xC000)        /* Set D0, D1 */
-//                         | ((gb >> 2) & 0x0003);     /* D2, D3 */
-//         GPIOE->BSRRL = (gb << 3) & 0x0780;          /* Set D4, D5, D6, D7 */
-//         delayUs(RENDER_WR_SETUP_DELAY);
-//         GPIOD->BSRRL = (1 << 5);                    /* Set WR line */
-//         delayUs(RENDER_NEXT_BYTE_DELAY);
+        writeData((frameBuffer[p] >> 8) & 0xFF); /* red and half green  */
+        writeData(frameBuffer[p] & 0xFF);        /* half green and blue */
     }
 
     gpio_setPin(CS);

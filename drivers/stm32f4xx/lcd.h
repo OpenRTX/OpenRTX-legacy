@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2020 by Silvano Seva IU2KWO                             *
+ *   Copyright (C) 2020 by Silvano Seva IU2KWO and Niccolò Izzo IU2KIN     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -34,7 +34,7 @@
 /**
  * Low level driver for Tytera MD380 display, which is has an HX8302-A controller.
  * Actually, no datasheet for the display controller exists on the internet,
- * however a compatible chip, for which datasheet exists, is the HX8353-E.
+ * however a fairly compatible chip, for which datasheet exists, is the HX8353-E.
  *
  *********************** HOW TO MANAGE FRAMEBUFFER *****************************
  *
