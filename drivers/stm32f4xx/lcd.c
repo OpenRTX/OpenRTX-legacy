@@ -106,6 +106,9 @@
 
 #define LCD_DELAY_US 30
 
+#define RENDER_WR_SETUP_DELAY 30
+#define RENDER_NEXT_BYTE_DELAY 30
+
 /*
  * LCD framebuffer, allocated on the heap by lcd_init().
  * Pixel format is RGB565, 16 bit per pixel
@@ -322,9 +325,9 @@ void lcd_render()
             GPIOD->BSRRL = ((rg << 14) & 0xC000)  /* Set D0, D1 */
                          | ((rg >> 2) & 0x0003);  /* D2, D3 */
             GPIOE->BSRRL = (rg << 3) & 0x0780;    /* Set D4, D5, D6, D7 */
-            delayUs(LCD_DELAY_US);
+            delayUs(RENDER_WR_SETUP_DELAY);
             GPIOD->BSRRL = (1 << 5);              /* Set WR line */
-            delayUs(LCD_DELAY_US);
+            delayUs(RENDER_NEXT_BYTE_DELAY);
 
             /* Send remaining half green and blue */
             GPIOD->BSRRH = 0xC023;                /* Clear D0, D1, D2, D3, WR */
@@ -332,9 +335,9 @@ void lcd_render()
             GPIOD->BSRRL = ((gb << 14) & 0xC000)  /* Set D0, D1 */
                          | ((gb >> 2) & 0x0003);  /* D2, D3 */
             GPIOE->BSRRL = (gb << 3) & 0x0780;    /* Set D4, D5, D6, D7 */
-            delayUs(LCD_DELAY_US);
+            delayUs(RENDER_WR_SETUP_DELAY);
             GPIOD->BSRRL = (1 << 5);              /* Set WR line */
-            delayUs(LCD_DELAY_US);
+            delayUs(RENDER_NEXT_BYTE_DELAY);
     }
 
     gpio_setPin(CS);
