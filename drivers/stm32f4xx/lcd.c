@@ -175,6 +175,7 @@ void lcd_init()
      * - MBNEN     = 1: enable bank
      */
     RCC->AHB3ENR |= RCC_AHB3ENR_FSMCEN;
+    RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
     FSMC_Bank1->BTCR[0] = 0x10D9;
 
     /* BTR1 config:
@@ -331,7 +332,7 @@ void lcd_init()
     writeData(0x05);      /* 16 bit per pixel */
     delayMs(10);
 
-    writeCmd(CMD_SLPOUT); /* Finally, turn on display */
+    writeCmd(CMD_SLPOUT); /* Turn on display */
     delayMs(120);
     writeCmd(CMD_DISPON);
     writeCmd(CMD_RAMWR);
@@ -375,6 +376,16 @@ void lcd_render()
     gpio_clearPin(CS);
     writeCmd(CMD_RAMWR);
 
+    DMA2_Stream7->CR = DMA_SxCR_CHSEL   /* Channel 7 */
+                     | DMA_SxCR_MINC    /* Increment memory */
+                     | DMA_SxCR_DIR_1   /* Memory to memory */
+                     | DMA_SxCR_TCIE    /* Transfer complete interrupt */
+                     | DMA_SxCR_TEIE;   /* Transfer error interrupt */
+    DMA2_Stream7->NDTR = 160*128*2;
+    DMA2_Stream7->PAR = ((uint32_t ) frameBuffer);
+    DMA2_Stream7->M0AR = LCD_FSMC_ADDR_DATA;
+    DMA2_Stream7->CR |= DMA_SxCR_EN;
+
     /*
      * Copying data from framebuffer to screen buffer. When using the 8-bit bus
      * interface, display expects values in order R-G-B, while in framebuffer
@@ -383,15 +394,15 @@ void lcd_render()
      * See also HX8353-E datasheed, at page 27.
      */
 
-    for(size_t p = 0; p < 160*128*2; p++)
-    {
-        uint8_t *ptr = ((uint8_t *) frameBuffer);
-        writeData(ptr[p]);
-//         writeData((frameBuffer[p] >> 8) & 0xFF); /* red and half green  */
-//         writeData(frameBuffer[p] & 0xFF);        /* half green and blue */
-    }
+//     for(size_t p = 0; p < 160*128*2; p++)
+//     {
+//         uint8_t *ptr = ((uint8_t *) frameBuffer);
+//         writeData(ptr[p]);
+// //         writeData((frameBuffer[p] >> 8) & 0xFF); /* red and half green  */
+// //         writeData(frameBuffer[p] & 0xFF);        /* half green and blue */
+//     }
 
-    gpio_setPin(CS);
+//     gpio_setPin(CS);
 }
 
 uint16_t *lcd_getFrameBuffer()
