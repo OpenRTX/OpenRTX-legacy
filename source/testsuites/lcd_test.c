@@ -32,29 +32,22 @@
 #include "task.h"
 #include "stm32f4xx.h"
 #include "gpio.h"
+#include "graphics.h"
 #include "lcd.h"
 
 void blink(void *arg)
 {
-    lcd_init();
-    lcd_setBacklightLevel(254);
-    uint16_t *buf = lcd_getFrameBuffer();
 
-    /* All screen white */
-    for(uint8_t x = 0; x < SCREEN_WIDTH; x++)
-    {
-        for(uint8_t y = 0; y < SCREEN_HEIGTH; y++)
-        {
-            buf[x+y*SCREEN_WIDTH] = 0xFFFF;     /* WHITE */
-        }
-    }
+    graphicsInit(COLOR_WHITE);
+    clearRows(0, 8, COLOR_WHITE);
+    lcd_setBacklightLevel(254);
 
     /* Horizontal red line */
     for(uint8_t x = 0; x < SCREEN_WIDTH; x++)
     {
         for(uint8_t y = 10; y < 30; y++)
         {
-            buf[x+y*SCREEN_WIDTH] = 0xF800;     /* RED */
+            setPixel(x, y, 0xF800);             /* RED */
         }
     }
 
@@ -63,10 +56,18 @@ void blink(void *arg)
     {
         for(uint8_t y = 0; y < SCREEN_HEIGTH; y++)
         {
-            buf[x+y*SCREEN_WIDTH] = 0x001F;     /* BLUE */
+            setPixel(x, y, 0x001F);             /* BLUE */
         }
     }
 
+    /* Vertical green line */
+    for(uint8_t x = 80; x < 100; x++)
+    {
+        for(uint8_t y = 0; y < SCREEN_HEIGTH; y++)
+        {
+            setPixel(x, y, 0x07e0);             /* GREEN */
+        }
+    }
 
     while(1)
     {
