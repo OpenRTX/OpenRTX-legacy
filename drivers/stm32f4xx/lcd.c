@@ -104,9 +104,12 @@
 #define CMD_SET_SPI_RDEN 0xfe // Set SPI Read address (and enable)
 #define CMD_GET_SPI_RDEN 0xff // Get FE A[7:0] parameter
 
-
+/* Addresses for memory-mapped display data and command (through FSMC) */
 #define LCD_FSMC_ADDR_COMMAND 0x60000000
 #define LCD_FSMC_ADDR_DATA    0x60040000
+
+#define writeCmd(cmd) *((volatile uint8_t*)LCD_FSMC_ADDR_COMMAND)=cmd;
+#define writeData(val) *((volatile uint8_t*)LCD_FSMC_ADDR_DATA)=val;
 
 /*
  * LCD framebuffer, allocated on the heap by lcd_init().
@@ -116,18 +119,20 @@ static uint16_t *frameBuffer;
 
 void __attribute__((used)) DMA2_Stream7_IRQHandler()
 {
-    
+    DMA2->HIFCR |= DMA_HIFCR_CTCIF7 | DMA_HIFCR_CTEIF7;    /* Clear flags */
+    gpio_setPin(CS);
 }
 
-static inline __attribute__((__always_inline__)) void writeCmd(uint8_t cmd)
-{
-    *(volatile uint8_t*) LCD_FSMC_ADDR_COMMAND = cmd;
-}
+// static inline __attribute__((__always_inline__)) void writeCmd(uint8_t cmd)
+// {
+//     *(volatile uint8_t*) LCD_FSMC_ADDR_COMMAND = cmd;
+// }
+// 
+// static inline __attribute__((__always_inline__)) void writeData(uint8_t val)
+// {
+//     *((volatile uint8_t*)LCD_FSMC_ADDR_DATA) = val;
+// }
 
-static inline __attribute__((__always_inline__)) void writeData(uint8_t val)
-{
-    *((volatile uint8_t*) LCD_FSMC_ADDR_DATA) = val;
-}
 
 void lcd_init()
 {
@@ -162,6 +167,14 @@ void lcd_init()
     gpio_setMode(GPIOC, 6, ALTERNATE);
     gpio_setAlternateFunction(GPIOC, 6, 3);
 
+    /*
+     * Turn on FSMC and DMA2: the first one is used to efficiently manage the
+     * display data and control lines, while the second is used to Transfer the
+     * framebuffer content to the screen without using CPU.
+     */
+    RCC->AHB3ENR |= RCC_AHB3ENR_FSMCEN;
+    RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
+
     /* Configure FSMC as LCD driver.
      * BCR1 config:
      * - CBURSTRW  = 0: asynchronous write operation
@@ -179,8 +192,6 @@ void lcd_init()
      * - MUXEN     = 0: addr/data not multiplexed
      * - MBNEN     = 1: enable bank
      */
-    RCC->AHB3ENR |= RCC_AHB3ENR_FSMCEN;
-    RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
     FSMC_Bank1->BTCR[0] = 0x10D9;
 
     /* BTR1 config:
@@ -337,7 +348,7 @@ void lcd_init()
     writeData(0x05);      /* 16 bit per pixel */
     delayMs(10);
 
-    writeCmd(CMD_SLPOUT); /* Turn on display */
+    writeCmd(CMD_SLPOUT); /* Finally, turn on display */
     delayMs(120);
     writeCmd(CMD_DISPON);
     writeCmd(CMD_RAMWR);
@@ -381,36 +392,22 @@ void lcd_render()
     gpio_clearPin(CS);
     writeCmd(CMD_RAMWR);
 
-    DMA2_Stream7->CR = DMA_SxCR_CHSEL   /* Channel 7 */
-                     | DMA_SxCR_PINC    /* Increment memory */
-                     | DMA_SxCR_DIR_1   /* Memory to memory */
-                     | DMA_SxCR_TCIE    /* Transfer complete interrupt */
-                     | DMA_SxCR_TEIE;   /* Transfer error interrupt */
-    DMA2_Stream7->NDTR = 160*128*2;
-    DMA2_Stream7->PAR = ((uint32_t ) frameBuffer);
-    DMA2_Stream7->M0AR = LCD_FSMC_ADDR_DATA;
-    DMA2_Stream7->CR |= DMA_SxCR_EN;
-
-    while((DMA2->HISR & (DMA_HISR_TCIF7 | DMA_HISR_TEIF7)) == 0) ;
-    DMA2->HIFCR |= DMA_HIFCR_CTCIF7 | DMA_HIFCR_CTEIF7;
-    gpio_setPin(CS);
     /*
-     * Copying data from framebuffer to screen buffer. When using the 8-bit bus
-     * interface, display expects values in order R-G-B, while in framebuffer
-     * data is stored with blue component in the low 5 bits. Thus, we have to
-     * send the high byte followed by the low one.
-     * See also HX8353-E datasheed, at page 27.
+     * Configure DMA2 stream 7 to send framebuffer data to the screen.
+     * Both source and destination memory sizes are configured to 8 bit, thus
+     * we have to set the transfer size to twice the framebuffer size, since
+     * this one is made of 16 bit variables.
      */
-
-//     for(size_t p = 0; p < 160*128*2; p++)
-//     {
-//         uint8_t *ptr = ((uint8_t *) frameBuffer);
-//         writeData(ptr[p]);
-// //         writeData((frameBuffer[p] >> 8) & 0xFF); /* red and half green  */
-// //         writeData(frameBuffer[p] & 0xFF);        /* half green and blue */
-//     }
-
-//     gpio_setPin(CS);
+    DMA2_Stream7->NDTR = SCREEN_HEIGTH*SCREEN_WIDTH*2;
+    DMA2_Stream7->PAR  = ((uint32_t ) frameBuffer);
+    DMA2_Stream7->M0AR = LCD_FSMC_ADDR_DATA;
+    DMA2_Stream7->CR = DMA_SxCR_CHSEL         /* Channel 7                   */
+                    | DMA_SxCR_PL_0           /* Medium priority             */
+                    | DMA_SxCR_PINC           /* Increment source pointer    */
+                    | DMA_SxCR_DIR_1          /* Memory to memory            */
+                    | DMA_SxCR_TCIE           /* Transfer complete interrupt */
+                    | DMA_SxCR_TEIE           /* Transfer error interrupt    */
+                    | DMA_SxCR_EN;            /* Start transfer              */
 }
 
 uint16_t *lcd_getFrameBuffer()
