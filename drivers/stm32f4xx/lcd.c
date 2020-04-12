@@ -383,10 +383,12 @@ void lcd_render()
      * See also HX8353-E datasheed, at page 27.
      */
 
-    for(size_t p = 0; p < 160*128; p++)
+    for(size_t p = 0; p < 160*128*2; p++)
     {
-        writeData((frameBuffer[p] >> 8) & 0xFF); /* red and half green  */
-        writeData(frameBuffer[p] & 0xFF);        /* half green and blue */
+        uint8_t *ptr = ((uint8_t *) frameBuffer);
+        writeData(ptr[p]);
+//         writeData((frameBuffer[p] >> 8) & 0xFF); /* red and half green  */
+//         writeData(frameBuffer[p] & 0xFF);        /* half green and blue */
     }
 
     gpio_setPin(CS);
