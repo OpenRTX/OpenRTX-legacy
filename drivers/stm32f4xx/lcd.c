@@ -114,6 +114,11 @@
  */
 static uint16_t *frameBuffer;
 
+void __attribute__((used)) DMA2_Stream7_IRQHandler()
+{
+    
+}
+
 static inline __attribute__((__always_inline__)) void writeCmd(uint8_t cmd)
 {
     *(volatile uint8_t*) LCD_FSMC_ADDR_COMMAND = cmd;
@@ -377,7 +382,7 @@ void lcd_render()
     writeCmd(CMD_RAMWR);
 
     DMA2_Stream7->CR = DMA_SxCR_CHSEL   /* Channel 7 */
-                     | DMA_SxCR_MINC    /* Increment memory */
+                     | DMA_SxCR_PINC    /* Increment memory */
                      | DMA_SxCR_DIR_1   /* Memory to memory */
                      | DMA_SxCR_TCIE    /* Transfer complete interrupt */
                      | DMA_SxCR_TEIE;   /* Transfer error interrupt */
@@ -386,6 +391,9 @@ void lcd_render()
     DMA2_Stream7->M0AR = LCD_FSMC_ADDR_DATA;
     DMA2_Stream7->CR |= DMA_SxCR_EN;
 
+    while((DMA2->HISR & (DMA_HISR_TCIF7 | DMA_HISR_TEIF7)) == 0) ;
+    DMA2->HIFCR |= DMA_HIFCR_CTCIF7 | DMA_HIFCR_CTEIF7;
+    gpio_setPin(CS);
     /*
      * Copying data from framebuffer to screen buffer. When using the 8-bit bus
      * interface, display expects values in order R-G-B, while in framebuffer
