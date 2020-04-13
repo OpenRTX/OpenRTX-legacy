@@ -35,6 +35,8 @@ void adc1_init();
 
 void adc1_shutdown();
 
+void adc1_start();
+
 /**
  * Get current measurement of a given channel, mapped as below:
  * - CH0 volume level

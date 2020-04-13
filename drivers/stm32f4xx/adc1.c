@@ -61,8 +61,8 @@ void adc1_init()
     ADC2->CR2 |= ADC_CR2_DMA;
 
     /* Scan sequence config. */
-    ADC1->SQR1 = 4 << 20;    /* Four channels to be converted          */
-    ADC1->SQR3 |= (1 << 1)   /* CH1, battery voltage on PA1            */
+    ADC1->SQR1 = 3 << 20;    /* Four channels to be converted          */
+    ADC1->SQR3 |= (1 << 0)   /* CH1, battery voltage on PA1            */
                |  (8 << 5)   /* CH8, RSSI value on PB0                 */
                |  (3 << 10)  /* CH3, vox level on PA3                  */
                |  (0 << 15); /* CH0, volume potentiometer level on PA0 */
@@ -84,15 +84,18 @@ void adc1_init()
                      | DMA_SxCR_CIRC
                      | DMA_SxCR_PFCTRL
                      | DMA_SxCR_EN;
-
-    /* Finally, start ADC */
-    ADC1->CR2 |= ADC_CR2_SWSTART | ADC_CR2_ADON;
 }
 
 void adc1_shutdown()
 {
     RCC->APB2ENR &= ~RCC_APB2ENR_ADC1EN;
 }
+
+void adc1_start()
+{
+    ADC1->CR2 |= ADC_CR2_SWSTART | ADC_CR2_ADON;
+}
+
 
 uint16_t adc1_getMeasurement(uint8_t ch)
 {

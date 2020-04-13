@@ -33,6 +33,7 @@
 #include "stm32f4xx.h"
 #include "gpio.h"
 #include "adc1.h"
+#include "delays.h"
 
 void test(void *arg)
 {
@@ -40,9 +41,11 @@ void test(void *arg)
 
     while(1)
     {
+        adc1_start();
+        delayMs(50);
         uint32_t value = adc1_getMeasurement(1);
         value = (value * 3300)/(1 << 12);           /* Convert to mV */
-        printf("Current vbat %d\n", value);
+        printf("Current vbat %d\r\n", value);
 
         gpio_togglePin(GPIOE, 0);
         vTaskDelay(1000);
