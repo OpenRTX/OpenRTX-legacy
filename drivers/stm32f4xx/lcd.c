@@ -397,8 +397,8 @@ void lcd_renderRows(uint8_t startRow, uint8_t endRow)
     /* Configure start and end rows in display driver */
     writeCmd(CMD_RASET);
     writeData(0x00);
-    writeData(0x00);
     writeData(startRow);
+    writeData(0x00);
     writeData(endRow);
 
     /* Now, write to memory */
@@ -422,7 +422,7 @@ void lcd_renderRows(uint8_t startRow, uint8_t endRow)
                      | DMA_SxCR_EN;           /* Start transfer              */
 }
 
-uint8_t lcd_renderingInProgress()
+bool lcd_renderingInProgress()
 {
     /*
      * Render is in progress if PD6 is low. Its value can be tested reading

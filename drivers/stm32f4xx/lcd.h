@@ -29,6 +29,7 @@
 #define LCH_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "stm32f4xx.h"
 
 /**
@@ -102,9 +103,9 @@ static inline void lcd_render()
 /**
  * Check if framebuffer is being copied to the screen or not, in which case it
  * can be modified without problems.
- * @return zero if rendering is not in progress.
+ * @return false if rendering is not in progress.
  */
-uint8_t lcd_renderingInProgress();
+bool lcd_renderingInProgress();
 
 /**
  * Get pointer to framebuffer. This buffer is addressed linearly and each

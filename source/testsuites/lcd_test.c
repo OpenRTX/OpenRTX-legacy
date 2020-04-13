@@ -43,50 +43,34 @@ void blink(void *arg)
     lcd_setBacklightLevel(254);
 
     /* Horizontal red line */
-    for(uint8_t x = 0; x < SCREEN_WIDTH; x++)
-    {
-        for(uint8_t y = 10; y < 30; y++)
-        {
-            setPixel(x, y, 0xF800);             /* RED */
-        }
-    }
-
+    fillRect(0, 10, SCREEN_WIDTH, 20, 0xF800);
     /* Vertical blue line */
-    for(uint8_t x = 10; x < 30; x++)
-    {
-        for(uint8_t y = 0; y < SCREEN_HEIGHT; y++)
-        {
-            setPixel(x, y, 0x001F);             /* BLUE */
-        }
-    }
+    fillRect(10, 0, 20, SCREEN_HEIGHT, 0x001F);
 
     /* Vertical green line */
-    for(uint8_t x = 80; x < 100; x++)
-    {
-        for(uint8_t y = 0; y < SCREEN_HEIGHT; y++)
-        {
-            setPixel(x, y, 0x07e0);             /* GREEN */
-        }
-    }
+    fillRect(80, 0, 20, SCREEN_HEIGHT, 0x07e0);
 
-    drawLine(0, 0, 100, 100, 0x1234);
-    drawRect(100, 100, 20, 20, 0x0056);
-    fillRect(30, 30, 60, 60, 0x0000);
     char *buffer = "KEK";
-    //printCore(0, 3, buffer, FONT_SIZE_4, TEXT_ALIGN_RIGHT, 0x0000);
-    //renderRows(4, 8);
-    //renderRows(0, 4);
-    render();
+    printCore(32, 32, buffer, FONT_SIZE_1, TEXT_ALIGN_LEFT, 0x0000);
+
+    /* Example of split rendering, first render top half then bottom */
+    renderRows(4, 8);
+    renderRows(0, 4);
+
+    /* We could have called directly this otherwise
+    render(); */
 
     while(1)
     {
         gpio_togglePin(GPIOE, 0);
         vTaskDelay(500);
+
     }
 }
 
 int main (void)
 {
+
     gpio_setMode(GPIOE, 0, OUTPUT);
 
     xTaskCreate(blink, "blink", 256, NULL, 0, NULL);
