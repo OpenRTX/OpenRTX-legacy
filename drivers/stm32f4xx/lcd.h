@@ -83,10 +83,28 @@ void lcd_terminate();
 void lcd_setBacklightLevel(uint8_t level);
 
 /**
+ * Copy a given section, between two given rows, of framebuffer content to the
+ * display.
+ * @param startRow: first row of the framebuffer section to be copied
+ * @param endRow: last row of the framebuffer section to be copied
+ */
+void lcd_renderRows(uint8_t startRow, uint8_t endRow);
+
+/**
  * Copy framebuffer content to the display internal buffer. To be called
  * whenever there is need to update the display.
  */
-void lcd_render();
+static inline void lcd_render()
+{
+    lcd_renderRows(0, SCREEN_HEIGTH);
+}
+
+/**
+ * Check if framebuffer is being copied to the screen or not, in which case it
+ * can be modified without problems.
+ * @return zero if rendering is not in progress.
+ */
+uint8_t lcd_renderingInProgress();
 
 /**
  * Get pointer to framebuffer. This buffer is addressed linearly and each

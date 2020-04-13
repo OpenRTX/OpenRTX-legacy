@@ -133,7 +133,6 @@ static inline __attribute__((__always_inline__)) void writeData(uint8_t val)
     *((volatile uint8_t*) LCD_FSMC_ADDR_DATA) = val;
 }
 
-
 void lcd_init()
 {
     /* Allocate framebuffer, two bytes per pixel */
@@ -381,7 +380,7 @@ void lcd_setBacklightLevel(uint8_t level)
     TIM8->CCR1 = level;
 }
 
-void lcd_render()
+void lcd_renderRows(uint8_t startRow, uint8_t endRow)
 {
 
     /*
@@ -397,6 +396,15 @@ void lcd_render()
     GPIOE->MODER |= 0x2A8000;
 
     gpio_clearPin(CS);
+
+    /* Configure start and end rows in display driver */
+    writeCmd(CMD_RASET);
+    writeData(0x00);
+    writeData(startRow);
+    writeData(0x00);
+    writeData(endRow);
+
+    /* Now, write to memory */
     writeCmd(CMD_RAMWR);
 
     /*
@@ -405,16 +413,26 @@ void lcd_render()
      * we have to set the transfer size to twice the framebuffer size, since
      * this one is made of 16 bit variables.
      */
-    DMA2_Stream7->NDTR = SCREEN_HEIGTH*SCREEN_WIDTH*2;
-    DMA2_Stream7->PAR  = ((uint32_t ) frameBuffer);
+    DMA2_Stream7->NDTR = (endRow - startRow)*SCREEN_WIDTH*2;
+    DMA2_Stream7->PAR  = ((uint32_t ) frameBuffer + (startRow * SCREEN_WIDTH));
     DMA2_Stream7->M0AR = LCD_FSMC_ADDR_DATA;
     DMA2_Stream7->CR = DMA_SxCR_CHSEL         /* Channel 7                   */
-                    | DMA_SxCR_PL_0           /* Medium priority             */
-                    | DMA_SxCR_PINC           /* Increment source pointer    */
-                    | DMA_SxCR_DIR_1          /* Memory to memory            */
-                    | DMA_SxCR_TCIE           /* Transfer complete interrupt */
-                    | DMA_SxCR_TEIE           /* Transfer error interrupt    */
-                    | DMA_SxCR_EN;            /* Start transfer              */
+                     | DMA_SxCR_PL_0          /* Medium priority             */
+                     | DMA_SxCR_PINC          /* Increment source pointer    */
+                     | DMA_SxCR_DIR_1         /* Memory to memory            */
+                     | DMA_SxCR_TCIE          /* Transfer complete interrupt */
+                     | DMA_SxCR_TEIE          /* Transfer error interrupt    */
+                     | DMA_SxCR_EN;           /* Start transfer              */
+}
+
+uint8_t lcd_renderingInProgress()
+{
+    /*
+     * Render is in progress if PD6 is low. Its value can be tested reading
+     * GPIOD->ODR.
+     */
+    uint16_t pinValue = (GPIOD->ODR & (1 << 6));
+    return (pinValue == 0) ? 1 : 0;
 }
 
 uint16_t *lcd_getFrameBuffer()
