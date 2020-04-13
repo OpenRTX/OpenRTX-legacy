@@ -48,25 +48,24 @@ void adc1_init()
      * each channel is ~5.47kHz.
      */
     ADC->CCR |= ADC_CCR_ADCPRE;
-    ADC1->SMPR2 = ADC_SMPR2_SMP0;
-//                 | ADC_SMPR2_SMP1
-//                 | ADC_SMPR2_SMP3
-//                 | ADC_SMPR2_SMP8;
+    ADC1->SMPR2 = ADC_SMPR2_SMP0
+                | ADC_SMPR2_SMP1
+                | ADC_SMPR2_SMP3
+                | ADC_SMPR2_SMP8;
 
     /*
      * No overrun interrupt, 12-bit resolution, no analog watchdog, no
      * discontinuous mode, enable scan mode, no end of conversion interrupts.
      */
-//     ADC1->CR1 |= ADC_CR1_SCAN;
-//     ADC2->CR2 |= ADC_CR2_DMA | ADC_CR2_ADON;
-    ADC2->CR2 |= ADC_CR2_ADON;
+    ADC1->CR1 |= ADC_CR1_SCAN;
+    ADC1->CR2 |= ADC_CR2_DMA | ADC_CR2_ADON;
 
     /* Scan sequence config. */
-//     ADC1->SQR1 = 3 << 20;    /* Four channels to be converted          */
-    ADC1->SQR3 |= (1 << 0);   /* CH1, battery voltage on PA1            */
-//                |  (8 << 5)   /* CH8, RSSI value on PB0                 */
-//                |  (3 << 10)  /* CH3, vox level on PA3                  */
-//                |  (0 << 15); /* CH0, volume potentiometer level on PA0 */
+    ADC1->SQR1 = 3 << 20;    /* Four channels to be converted          */
+    ADC1->SQR3 |= (1 << 0)   /* CH1, battery voltage on PA1            */
+               |  (8 << 5)   /* CH8, RSSI value on PB0                 */
+               |  (3 << 10)  /* CH3, vox level on PA3                  */
+               |  (0 << 15); /* CH0, volume potentiometer level on PA0 */
 
     /* DMA2 Stream 0 configuration:
      * - channel 0: ADC1
@@ -77,14 +76,14 @@ void adc1_init()
      * - peripheral-to-memory transfer
      * - no interrupts
      */
-//     DMA2_Stream0->PAR = ((uint32_t) &(ADC1->DR));
-//     DMA2_Stream0->M0AR = ((uint32_t) &measurements);
-//     DMA2_Stream0->CR = DMA_SxCR_MSIZE_0
-//                      | DMA_SxCR_PSIZE_0
-//                      | DMA_SxCR_MINC
-//                      | DMA_SxCR_CIRC
-//                      | DMA_SxCR_PFCTRL
-//                      | DMA_SxCR_EN;
+    DMA2_Stream0->PAR = ((uint32_t) &(ADC1->DR));
+    DMA2_Stream0->M0AR = ((uint32_t) &measurements);
+    DMA2_Stream0->CR = DMA_SxCR_MSIZE_0
+                     | DMA_SxCR_PSIZE_0
+                     | DMA_SxCR_MINC
+                     | DMA_SxCR_CIRC
+                     | DMA_SxCR_PFCTRL
+                     | DMA_SxCR_EN;
 }
 
 void adc1_shutdown()
@@ -100,7 +99,6 @@ void adc1_start()
 
 uint16_t adc1_getMeasurement(uint8_t ch)
 {
-//     if(ch > 3) return 0;
-//     return measurements[ch];
-    return ADC1->DR;
+    if(ch > 3) return 0;
+    return measurements[ch];
 }
