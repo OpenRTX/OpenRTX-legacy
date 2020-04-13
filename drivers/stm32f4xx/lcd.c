@@ -108,8 +108,8 @@
 #define LCD_FSMC_ADDR_COMMAND 0x60000000
 #define LCD_FSMC_ADDR_DATA    0x60040000
 
-#define writeCmd(cmd) *((volatile uint8_t*)LCD_FSMC_ADDR_COMMAND)=cmd;
-#define writeData(val) *((volatile uint8_t*)LCD_FSMC_ADDR_DATA)=val;
+// #define writeCmd(cmd) *((volatile uint8_t*)LCD_FSMC_ADDR_COMMAND)=cmd;
+// #define writeData(val) *((volatile uint8_t*)LCD_FSMC_ADDR_DATA)=val;
 
 /*
  * LCD framebuffer, allocated on the heap by lcd_init().
@@ -123,15 +123,15 @@ void __attribute__((used)) DMA2_Stream7_IRQHandler()
     gpio_setPin(CS);
 }
 
-// static inline __attribute__((__always_inline__)) void writeCmd(uint8_t cmd)
-// {
-//     *(volatile uint8_t*) LCD_FSMC_ADDR_COMMAND = cmd;
-// }
-// 
-// static inline __attribute__((__always_inline__)) void writeData(uint8_t val)
-// {
-//     *((volatile uint8_t*)LCD_FSMC_ADDR_DATA) = val;
-// }
+static inline __attribute__((__always_inline__)) void writeCmd(uint8_t cmd)
+{
+    *((volatile uint8_t*) LCD_FSMC_ADDR_COMMAND) = cmd;
+}
+
+static inline __attribute__((__always_inline__)) void writeData(uint8_t val)
+{
+    *((volatile uint8_t*) LCD_FSMC_ADDR_DATA) = val;
+}
 
 
 void lcd_init()
@@ -168,12 +168,19 @@ void lcd_init()
     gpio_setAlternateFunction(GPIOC, 6, 3);
 
     /*
-     * Turn on FSMC and DMA2: the first one is used to efficiently manage the
-     * display data and control lines, while the second is used to Transfer the
+     * Turn on DMA2 and configure its interrupt. DMA is used to transfer the
      * framebuffer content to the screen without using CPU.
      */
-    RCC->AHB3ENR |= RCC_AHB3ENR_FSMCEN;
     RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
+    NVIC_ClearPendingIRQ(DMA2_Stream7_IRQn);
+    NVIC_SetPriority(DMA2_Stream7_IRQn, 14);
+    NVIC_EnableIRQ(DMA2_Stream7_IRQn);
+
+    /*
+     * Turn on FSMC, used to efficiently manage the display data and control
+     * lines.
+     */
+    RCC->AHB3ENR |= RCC_AHB3ENR_FSMCEN;
 
     /* Configure FSMC as LCD driver.
      * BCR1 config:
