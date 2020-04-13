@@ -78,11 +78,11 @@ void adc1_init()
      */
     DMA2_Stream0->PAR = ((uint32_t) &(ADC1->DR));
     DMA2_Stream0->M0AR = ((uint32_t) &measurements);
+    DMA2_Stream0->NDTR = 4;
     DMA2_Stream0->CR = DMA_SxCR_MSIZE_0
                      | DMA_SxCR_PSIZE_0
                      | DMA_SxCR_MINC
                      | DMA_SxCR_CIRC
-                     | DMA_SxCR_PFCTRL
                      | DMA_SxCR_EN;
 }
 
