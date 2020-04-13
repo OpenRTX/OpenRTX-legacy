@@ -110,7 +110,12 @@ uint8_t lcd_renderingInProgress();
  * Get pointer to framebuffer. This buffer is addressed linearly and each
  * location is a pixel whose color coding is RGB565.
  * Changes to the framebuffer will not be reflected on the display until
- * lcd_render() is called.
+ * lcd_render() or lcd_renderRows() are called.
+ *
+ * IMPORTANT NOTE: to accomodate the display driver chip's needs, this buffer
+ * MUST be filled with values in big endian mode! A cleaner way to have the
+ * correct endianness, is to use GCC's builtin function __builtin_bswap16().
+ *
  * WARNING: no bound check is performed! Do not call free() on the pointer
  * returned, doing so will destroy the framebuffer!
  * @return pointer to framebuffer.

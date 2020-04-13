@@ -108,9 +108,6 @@
 #define LCD_FSMC_ADDR_COMMAND 0x60000000
 #define LCD_FSMC_ADDR_DATA    0x60040000
 
-// #define writeCmd(cmd) *((volatile uint8_t*)LCD_FSMC_ADDR_COMMAND)=cmd;
-// #define writeData(val) *((volatile uint8_t*)LCD_FSMC_ADDR_DATA)=val;
-
 /*
  * LCD framebuffer, allocated on the heap by lcd_init().
  * Pixel format is RGB565, 16 bit per pixel
