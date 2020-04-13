@@ -58,7 +58,7 @@ void adc1_init()
      * discontinuous mode, enable scan mode, no end of conversion interrupts.
      */
     ADC1->CR1 |= ADC_CR1_SCAN;
-    ADC2->CR2 |= ADC_CR2_DMA;
+    ADC2->CR2 |= ADC_CR2_DMA | ADC_CR2_ADON;
 
     /* Scan sequence config. */
     ADC1->SQR1 = 3 << 20;    /* Four channels to be converted          */
@@ -93,7 +93,7 @@ void adc1_shutdown()
 
 void adc1_start()
 {
-    ADC1->CR2 |= ADC_CR2_SWSTART | ADC_CR2_ADON;
+    ADC1->CR2 |= ADC_CR2_SWSTART;
 }
 
 
