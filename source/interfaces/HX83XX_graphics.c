@@ -26,10 +26,12 @@
  ***************************************************************************/
 
 #include <string.h>
+#include <stdlib.h>
 #include "graphics.h"
 #include "lcd.h"
 
 #define INLINE __attribute__((always_inline)) inline
+#define LE2BE(x) __builtin_bswap16(x)
 #define swap(x, y) do { typeof(x) t = x; x = y; y = t; } while(0)
 
 #define FB_SIZE SCREEN_WIDTH * SCREEN_HEIGTH * 2
@@ -63,7 +65,8 @@ INLINE void clearRows(int16_t startRow, int16_t endRow, uint16_t backgroundColor
 		swap(startRow, endRow);
 	}
 
-    for(uint32_t i = startRow * ROW_HEIGHT * SCREEN_WIDTH; i < endRow *ROW_HEIGHT * SCREEN_WIDTH; i++)
+    for(uint16_t i = startRow * ROW_HEIGHT * SCREEN_WIDTH;
+        i < endRow * ROW_HEIGHT * SCREEN_WIDTH; i++)
         screenBuf[i] = backgroundColor;
 }
 
@@ -88,14 +91,64 @@ INLINE int16_t setPixel(int16_t x, int16_t y, uint16_t color)
 		return -1; // off the screen
 
     // Framebuffer is Big Endian, fix endianness before writing
-    screenBuf[x+y*SCREEN_WIDTH] = __builtin_bswap16(color);
+    screenBuf[x+y*SCREEN_WIDTH] = LE2BE(color);
 	return 0;
 }
 
-//INLINE void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
-//INLINE void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-//INLINE void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
-//
+INLINE void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
+{
+	int16_t steep = abs(y1 - y0) > abs(x1 - x0);
+
+	if (steep)
+	{
+		swap(x0, y0);
+		swap(x1, y1);
+	}
+
+	if (x0 > x1)
+	{
+		swap(x0, x1);
+		swap(y0, y1);
+	}
+
+	int16_t dx, dy;
+	dx = x1 - x0;
+	dy = abs(y1 - y0);
+
+	int16_t err = dx / 2;
+	int16_t ystep;
+
+	if (y0 < y1)
+		ystep = 1;
+	else
+		ystep = -1;
+
+	for (; x0<=x1; x0++)
+	{
+		if (steep)
+			setPixel(y0, x0, color);
+		else
+			setPixel(x0, y0, color);
+
+		err -= dy;
+		if (err < 0)
+		{
+			y0 += ystep;
+			err += dx;
+		}
+	}
+}
+
+INLINE void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
+{
+	fillRect(x, y, 1, h, color);
+}
+
+INLINE void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
+{
+	fillRect(x, y, w, 1, color);
+}
+
 //INLINE void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
 //INLINE void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
 //
@@ -109,9 +162,24 @@ INLINE int16_t setPixel(int16_t x, int16_t y, uint16_t color)
 //INLINE void drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
 //INLINE void fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
 //INLINE void drawRoundRectWithDropShadow(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
-//
-//INLINE void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-//INLINE void fillRect(int16_t x, int16_t y, int16_t width, int16_t height, bool isInverted);
+
+INLINE void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
+{
+	drawFastHLine(x        , y        , w, color);
+	drawFastHLine(x        , y + h - 1, w, color);
+	drawFastVLine(x        , y        , h, color);
+	drawFastVLine(x + w - 1, y        , h, color);
+}
+
+INLINE void fillRect(int16_t x, int16_t y, int16_t width, int16_t height, uint16_t color)
+{
+    for(uint16_t vscan = y; vscan < y+height; vscan++) {
+        for(uint16_t hscan = x; hscan < x+width; hscan++) {
+            screenBuf[vscan * SCREEN_WIDTH + hscan] = LE2BE(color);
+        }
+    }
+}
+
 //INLINE void drawRectWithDropShadow(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 //
 //INLINE void drawBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t w, int16_t h, uint16_t color);
