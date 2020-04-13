@@ -69,6 +69,10 @@ void blink(void *arg)
         }
     }
 
+    drawLine(0, 0, 100, 100, 0x1234);
+    drawRect(100, 100, 20, 20, 0x0056);
+    fillRect(30, 30, 60, 60, 0x0000);
+
     while(1)
     {
         lcd_render();
