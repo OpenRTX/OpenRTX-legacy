@@ -78,7 +78,7 @@ LIBS :=
 ##
 ## List here additional include directories (in the form -Iinclude_dir)
 ##
-INCLUDE_DIRS := -Iinclude/io -Iinclude/interfaces
+INCLUDE_DIRS := -Iinclude/io -Iinclude/interfaces -Iinclude/hardware
 
 ##
 ## List here additional defines

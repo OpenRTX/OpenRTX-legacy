@@ -81,7 +81,7 @@ INLINE void render(void);
 INLINE void renderRows(int16_t startRow, int16_t endRow);
 INLINE void printCentered(uint8_t y, const  char *text, font_t fontSize);
 INLINE void printAt(uint8_t x, uint8_t y,const  char *text, font_t fontSize);
-INLINE int printCore(int16_t x, int16_t y,const char *szMsg, font_t fontSize, textAlign_t alignment, bool isInverted);
+INLINE int printCore(int16_t x, int16_t y,const char *szMsg, font_t fontSize, textAlign_t alignment, uint16_t color);
 
 INLINE int16_t setPixel(int16_t x, int16_t y, uint16_t color)
 {

@@ -39,7 +39,7 @@
  *********************** HOW TO MANAGE FRAMEBUFFER *****************************
  *
  * This driver allocates the framebuffer as a block of memory addressed linearly
- * as an array of SCREEN_HEIGTH*SCREEN_WIDTH 16-bit variables.
+ * as an array of SCREEN_HEIGHT*SCREEN_WIDTH 16-bit variables.
  * With respect to it, screen is indexed in this way:
  *
  *   (0,0)
@@ -56,7 +56,7 @@
  */
 
 #define SCREEN_WIDTH 160
-#define SCREEN_HEIGTH 128
+#define SCREEN_HEIGHT 128
 
 /**
  * This function initialises the display, configures TIM8 for backlight control
@@ -96,7 +96,7 @@ void lcd_renderRows(uint8_t startRow, uint8_t endRow);
  */
 static inline void lcd_render()
 {
-    lcd_renderRows(0, SCREEN_HEIGTH);
+    lcd_renderRows(0, SCREEN_HEIGHT);
 }
 
 /**

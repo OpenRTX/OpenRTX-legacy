@@ -54,7 +54,7 @@ void blink(void *arg)
     /* Vertical blue line */
     for(uint8_t x = 10; x < 30; x++)
     {
-        for(uint8_t y = 0; y < SCREEN_HEIGTH; y++)
+        for(uint8_t y = 0; y < SCREEN_HEIGHT; y++)
         {
             setPixel(x, y, 0x001F);             /* BLUE */
         }
@@ -63,7 +63,7 @@ void blink(void *arg)
     /* Vertical green line */
     for(uint8_t x = 80; x < 100; x++)
     {
-        for(uint8_t y = 0; y < SCREEN_HEIGTH; y++)
+        for(uint8_t y = 0; y < SCREEN_HEIGHT; y++)
         {
             setPixel(x, y, 0x07e0);             /* GREEN */
         }
@@ -72,10 +72,14 @@ void blink(void *arg)
     drawLine(0, 0, 100, 100, 0x1234);
     drawRect(100, 100, 20, 20, 0x0056);
     fillRect(30, 30, 60, 60, 0x0000);
+    char *buffer = "KEK";
+    //printCore(0, 3, buffer, FONT_SIZE_4, TEXT_ALIGN_RIGHT, 0x0000);
+    //renderRows(4, 8);
+    //renderRows(0, 4);
+    render();
 
     while(1)
     {
-        lcd_render();
         gpio_togglePin(GPIOE, 0);
         vTaskDelay(500);
     }

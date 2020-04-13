@@ -133,7 +133,7 @@ static inline __attribute__((__always_inline__)) void writeData(uint8_t val)
 void lcd_init()
 {
     /* Allocate framebuffer, two bytes per pixel */
-    frameBuffer = (uint16_t *) malloc(SCREEN_WIDTH * SCREEN_HEIGTH * 2);
+    frameBuffer = (uint16_t *) malloc(SCREEN_WIDTH * SCREEN_HEIGHT * 2);
     if(frameBuffer == NULL)
     {
         printf("*** LCD ERROR: cannot allocate framebuffer! ***");
@@ -397,8 +397,8 @@ void lcd_renderRows(uint8_t startRow, uint8_t endRow)
     /* Configure start and end rows in display driver */
     writeCmd(CMD_RASET);
     writeData(0x00);
-    writeData(startRow);
     writeData(0x00);
+    writeData(startRow);
     writeData(endRow);
 
     /* Now, write to memory */

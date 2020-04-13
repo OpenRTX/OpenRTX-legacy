@@ -27,6 +27,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "HX83XX_charset.h"
 #include "graphics.h"
 #include "lcd.h"
 
@@ -34,7 +35,7 @@
 #define LE2BE(x) __builtin_bswap16(x)
 #define swap(x, y) do { typeof(x) t = x; x = y; y = t; } while(0)
 
-#define FB_SIZE SCREEN_WIDTH * SCREEN_HEIGTH * 2
+#define FB_SIZE SCREEN_WIDTH * SCREEN_HEIGHT * 2
 #define COLOR_DEPTH 16
 #define N_ROWS 8
 #define ROW_HEIGHT 16
@@ -57,7 +58,8 @@ INLINE void clearBuf(void)
 INLINE void clearRows(int16_t startRow, int16_t endRow, uint16_t backgroundColor)
 {
 	// Boundaries
-	if (((startRow < 0) || (endRow < 0)) || ((startRow > 8) || (endRow > 8)) || (startRow == endRow))
+	if (((startRow < 0) || (endRow < 0)) ||
+        ((startRow > N_ROWS) || (endRow > N_ROWS)) || (startRow == endRow))
 		return;
 
 	if (endRow < startRow)
@@ -66,8 +68,8 @@ INLINE void clearRows(int16_t startRow, int16_t endRow, uint16_t backgroundColor
 	}
 
     for(uint16_t i = startRow * ROW_HEIGHT * SCREEN_WIDTH;
-        i < endRow * ROW_HEIGHT * SCREEN_WIDTH; i++)
-        screenBuf[i] = backgroundColor;
+        i <= endRow * ROW_HEIGHT * SCREEN_WIDTH; i++)
+        screenBuf[i] = LE2BE(backgroundColor);
 }
 
 INLINE void render(void)
@@ -77,17 +79,138 @@ INLINE void render(void)
 
 INLINE void renderRows(int16_t startRow, int16_t endRow)
 {
-    // TODO: implement split framebuffer rendering
-    lcd_render();
+    lcd_renderRows(startRow * ROW_HEIGHT, endRow * ROW_HEIGHT);
 }
 
 //INLINE void printCentered(uint8_t y, const  char *text, font_t fontSize);
 //INLINE void printAt(uint8_t x, uint8_t y,const  char *text, font_t fontSize);
-//INLINE int printCore(int16_t x, int16_t y,const char *szMsg, font_t fontSize, textAlign_t alignment, bool isInverted);
+
+INLINE int printCore(int16_t x, int16_t y,const char *szMsg, font_t fontSize, textAlign_t alignment, uint16_t color)
+{
+	int16_t i, sLen;
+	uint8_t *currentCharData;
+	int16_t charWidthPixels;
+	int16_t charHeightPixels;
+	int16_t bytesPerChar;
+	int16_t startCode;
+	int16_t endCode;
+	uint8_t *currentFont;
+	uint8_t *writePos;
+	uint8_t *readPos;
+
+    sLen = strlen(szMsg);
+
+    switch(fontSize)
+    {
+    	case FONT_SIZE_1:
+    		currentFont = (uint8_t *) font_6x8;
+    		break;
+    	case FONT_SIZE_1_BOLD:
+			currentFont = (uint8_t *) font_6x8_bold;
+    		break;
+    	case FONT_SIZE_2:
+    		currentFont = (uint8_t *) font_8x8;
+    		break;
+    	case FONT_SIZE_3:
+    		currentFont = (uint8_t *) font_8x16;
+			break;
+    	case FONT_SIZE_4:
+    		currentFont = (uint8_t *) font_16x32;
+			break;
+    	default:
+    		return -2;// Invalid font selected
+    		break;
+    }
+
+    startCode   		= currentFont[2];  // get first defined character
+    endCode 	  		= currentFont[3];  // get last defined character
+    charWidthPixels   	= currentFont[4];  // width in pixel of one char
+    charHeightPixels  	= currentFont[5];  // page count per char
+    bytesPerChar 		= currentFont[7];  // bytes per char
+
+    if ((charWidthPixels*sLen) + x > 128)
+	{
+    	sLen = (128-x)/charWidthPixels;
+	}
+
+	if (sLen < 0)
+	{
+		return -1;
+	}
+
+	switch(alignment)
+	{
+		case TEXT_ALIGN_LEFT:
+			// left aligned, do nothing.
+			break;
+		case TEXT_ALIGN_CENTER:
+			x = (128 - (charWidthPixels * sLen))/2;
+			break;
+		case TEXT_ALIGN_RIGHT:
+			x = 128 - (charWidthPixels * sLen);
+			break;
+	}
+
+	for (i=0; i<sLen; i++)
+	{
+		uint32_t charOffset = (szMsg[i] - startCode);
+
+		// End boundary checking.
+		if (charOffset > endCode)
+		{
+			charOffset = ('?' - startCode); // Substitute unsupported ASCII code by a question mark
+		}
+
+		currentCharData = (uint8_t *)&currentFont[8 + (charOffset * bytesPerChar)];
+
+		for(int16_t row=0;row < charHeightPixels / 8 ;row++)
+		{
+			readPos = (currentCharData + row*charWidthPixels);
+			writePos = (screenBuf + x + (i*charWidthPixels) + ((y>>3) + row)*128) ;
+
+			if ((y&0x07)==0)
+			{
+				// y position is aligned to a row
+				for(int16_t p=0;p<charWidthPixels;p++)
+				{
+					#ifdef DISPLAY_CHECK_BOUNDS
+						checkWritePos(writePos);
+					#endif
+                    *writePos++ = LE2BE(color);
+				}
+			}
+			else
+			{
+				int16_t shiftNum = y & 0x07;
+				// y position is NOT aligned to a row
+
+				for(int16_t p=0;p<charWidthPixels;p++)
+				{
+					#ifdef DISPLAY_CHECK_BOUNDS
+						checkWritePos(writePos);
+					#endif
+                    *writePos++ = LE2BE(color);
+				}
+
+				readPos = (currentCharData + row*charWidthPixels);
+				writePos = (screenBuf + x + (i*charWidthPixels) + ((y>>3) + row + 1)*128) ;
+
+				for(int16_t p=0;p<charWidthPixels;p++)
+				{
+					#ifdef DISPLAY_CHECK_BOUNDS
+						checkWritePos(writePos);
+					#endif
+                    *writePos++ = LE2BE(color);
+				}
+			}
+		}
+	}
+	return 0;
+}
 
 INLINE int16_t setPixel(int16_t x, int16_t y, uint16_t color)
 {
-    if (x < 0 || x > SCREEN_WIDTH || y < 0 || y > SCREEN_HEIGTH)
+    if (x < 0 || x > SCREEN_WIDTH || y < 0 || y > SCREEN_HEIGHT)
 		return -1; // off the screen
 
     // Framebuffer is Big Endian, fix endianness before writing
