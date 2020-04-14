@@ -28,24 +28,30 @@
 #include "adc1.h"
 #include "gpio.h"
 
-static uint16_t measurements[4];
+uint16_t measurements[4];
 
 void adc1_init()
 {
     RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
     RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
 
-    /* Configure GPIOs to analog input mode */
+    /*
+     * Configure GPIOs to analog input mode:
+     * - PA0: volume potentiometer level
+     * - PA1: battery voltage
+     * - PA3: vox level
+     * - PB0: RSSI level
+     */
     gpio_setMode(GPIOA, 0, INPUT_ANALOG);
     gpio_setMode(GPIOA, 1, INPUT_ANALOG);
     gpio_setMode(GPIOA, 3, INPUT_ANALOG);
-    gpio_setMode(GPIOB, 8, INPUT_ANALOG);
+    gpio_setMode(GPIOB, 0, INPUT_ANALOG);
 
     /*
      * ADC clock is APB2 frequency divided by 8, giving 10.5MHz.
      * We set the sample time of each channel to 480 ADC cycles and we have to
-     * scan four channels: this gives that the effective sampling frequency of
-     * each channel is ~5.47kHz.
+     * scan four channels: given that a conversion takes 12 cycles, we have a
+     * total conversion time of ~187us.
      */
     ADC->CCR |= ADC_CCR_ADCPRE;
     ADC1->SMPR2 = ADC_SMPR2_SMP0
@@ -55,10 +61,14 @@ void adc1_init()
 
     /*
      * No overrun interrupt, 12-bit resolution, no analog watchdog, no
-     * discontinuous mode, enable scan mode, no end of conversion interrupts.
+     * discontinuous mode, enable scan mode, no end of conversion interrupts,
+     * enable continuous conversion (free-running).
      */
     ADC1->CR1 |= ADC_CR1_SCAN;
-    ADC1->CR2 |= ADC_CR2_DMA | ADC_CR2_ADON;
+    ADC1->CR2 |= ADC_CR2_DMA
+              | ADC_CR2_DDS
+              | ADC_CR2_CONT
+              | ADC_CR2_ADON;
 
     /* Scan sequence config. */
     ADC1->SQR1 = 3 << 20;    /* Four channels to be converted          */
@@ -88,14 +98,17 @@ void adc1_init()
 
 void adc1_shutdown()
 {
+    DMA2_Stream0->CR &= ~DMA_SxCR_EN;
+    ADC1->CR2 &= ADC_CR2_ADON;
     RCC->APB2ENR &= ~RCC_APB2ENR_ADC1EN;
 }
 
 void adc1_start()
 {
+    /* Start new DMA transfer and new ADC conversion */
+//     DMA2_Stream0->CR |= DMA_SxCR_EN;
     ADC1->CR2 |= ADC_CR2_SWSTART;
 }
-
 
 uint16_t adc1_getMeasurement(uint8_t ch)
 {

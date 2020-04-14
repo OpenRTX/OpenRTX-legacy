@@ -39,10 +39,10 @@ void adc1_start();
 
 /**
  * Get current measurement of a given channel, mapped as below:
- * - CH0 volume level
- * - CH1 battery voltage
+ * - CH0 battery voltage
+ * - CH1 RSSI level
  * - CH2 vox level
- * - CH3 RSSI level
+ * - CH3 volume level
  * @param ch: channel number, between 0 and 3.
  * @return current value of the specified channel.
  */
