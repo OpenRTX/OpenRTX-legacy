@@ -31,21 +31,45 @@
 #include <stdint.h>
 #include "stm32f4xx.h"
 
+/**
+ * Driver for ADC1, used to continuously sample the following channels:
+ * - ADC1_CH0 (PA0): output value of the volume potentiometer;
+ * - ADC1_CH1 (PA1): battery voltage through 1:3 resistor divider;
+ * - ADC1_CH3 (PA3): vox level;
+ * - ADC1_CH8 (PB0): RSSI level;
+ */
+
+/**
+ * Initialise and start ADC1 and DMA2 Stream 0.
+ *
+ * ADC is configured in free-running mode with 1:8 prescaler and a sample time
+ * for each channel of 480 cycles. This gives a sampling frequency, for each
+ * channel, of ~5.3kHz.
+ *
+ * DMA2 Stream 0 is used to transfer data from ADC1 data register to an internal
+ * buffer, from which is fetched by application code using adc1_getMeasurement().
+ */
 void adc1_init();
 
+/**
+ * Turn off ADC1 (also gating off its clock) and disable DMA2 Stream 0.
+ * DMA2 clock is kept active.
+ */
 void adc1_shutdown();
-
-void adc1_start();
 
 /**
  * Get current measurement of a given channel, mapped as below:
- * - CH0 battery voltage
- * - CH1 RSSI level
- * - CH2 vox level
- * - CH3 volume level
+ * - channel 0: battery voltage
+ * - channel 1: RSSI level
+ * - channel 2: vox level
+ * - channel 3: volume level
+ *
+ * NOTE: the mapping above DOES NOT correspond to the physical ADC channel
+ * mapping!
+ *
  * @param ch: channel number, between 0 and 3.
- * @return current value of the specified channel.
+ * @return current value of the specified channel in mV.
  */
-uint16_t adc1_getMeasurement(uint8_t ch);
+float adc1_getMeasurement(uint8_t ch);
 
 #endif /* ADC1_H */

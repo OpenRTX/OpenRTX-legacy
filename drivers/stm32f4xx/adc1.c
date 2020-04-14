@@ -94,6 +94,9 @@ void adc1_init()
                      | DMA_SxCR_MINC
                      | DMA_SxCR_CIRC
                      | DMA_SxCR_EN;
+
+    /* Finally, start conversion */
+    ADC1->CR2 |= ADC_CR2_SWSTART;
 }
 
 void adc1_shutdown()
@@ -103,15 +106,9 @@ void adc1_shutdown()
     RCC->APB2ENR &= ~RCC_APB2ENR_ADC1EN;
 }
 
-void adc1_start()
+float adc1_getMeasurement(uint8_t ch)
 {
-    /* Start new DMA transfer and new ADC conversion */
-//     DMA2_Stream0->CR |= DMA_SxCR_EN;
-    ADC1->CR2 |= ADC_CR2_SWSTART;
-}
-
-uint16_t adc1_getMeasurement(uint8_t ch)
-{
-    if(ch > 3) return 0;
-    return measurements[ch];
+    if(ch > 3) return 0.0f;
+    float value = ((float) measurements[ch]);
+    return (value * 3300.0f)/4096.0f;
 }
