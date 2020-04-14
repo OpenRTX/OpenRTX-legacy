@@ -8,32 +8,44 @@
 RADIO := MD380
 
 ##
+## List here your source files (both .s, .c and .cpp)
+##
+SRC := source/testsuites/lcd_test.c
+#source/main.c source/io/keyboard.c source/interfaces/pit.c
+
+##
 ## Selection of MCU platform and baseband
 ##
 ifeq "$(RADIO)" "GD77"
 	PLATFORM := FSL
 	BASEBAND := HR_C6000
 	DEFINES  := -DPLATFORM_GD77 -DBSP_FSL
+	DISPLAY  := UC1701
 else ifeq "$(RADIO)" "GD77s"
 	PLATFORM := FSL
 	BASEBAND := HR_C6000
 	DEFINES  := -DPLATFORM_GD77s -DBSP_FSL
+	DISPLAY  := NONE
 else ifeq "$(RADIO)" "DM1801"
 	PLATFORM := FSL
 	BASEBAND := HR_C6000
 	DEFINES  := -DPLATFORM_DM1801 -DBSP_FSL
+	DISPLAY  := UC1701
 else ifeq "$(RADIO)" "MD380"
 	PLATFORM := STM32F4XX
 	BASEBAND := HR_C5000
 	DEFINES  := -DPLATFORM_MD380 -DBSP_STM32F4XX -DENABLE_SWD
+	DISPLAY  := HX83XX
 endif
 	
-
 ##
-## List here your source files (both .s, .c and .cpp)
+## Selection of display controller driver
 ##
-SRC := source/testsuites/adc_test.c
-#source/main.c source/io/keyboard.c source/interfaces/pit.c
+ifeq "$(DISPLAY)" "UC1701"
+	SRC := $(SRC) source/interfaces/UC1701_graphics.c
+else ifeq "$(DISPLAY)" "HX83XX"
+	SRC := $(SRC) source/interfaces/HX83XX_graphics.c
+endif
 
 ##
 ## Drivers' source files and include directories
@@ -56,6 +68,7 @@ drivers/stm32f4xx/gpio.c              \
 drivers/stm32f4xx/usb_vcom.c          \
 drivers/stm32f4xx/delays.c            \
 drivers/stm32f4xx/adc1.c
+drivers/stm32f4xx/lcd.c
 endif
 
 ##
@@ -66,7 +79,7 @@ LIBS :=
 ##
 ## List here additional include directories (in the form -Iinclude_dir)
 ##
-INCLUDE_DIRS := -Iinclude/io -Iinclude/interfaces
+INCLUDE_DIRS := -Iinclude/io -Iinclude/interfaces -Iinclude/hardware
 
 ##
 ## List here additional defines
@@ -158,7 +171,7 @@ LFLAGS   := -mcpu=cortex-m4 -mthumb -Wl,--gc-sections -Wl,-Map,main.map \
  	    $(OPTLEVEL) -nostdlib -Wl,-T./linkerscripts/linker_script.ld
 DFLAGS   := -MMD -MP
 
-LINK_LIBS := $(LIBS) -Wl,--start-group -lc -lgcc -Wl,--end-group
+LINK_LIBS := $(LIBS) -Wl,--start-group -lc -lgcc -lm -Wl,--end-group
 
 CC  := arm-none-eabi-gcc
 CXX := arm-none-eabi-g++
