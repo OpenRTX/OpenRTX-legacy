@@ -34,7 +34,7 @@ void rtc_init()
     RCC->APB1ENR |= RCC_APB1ENR_PWREN;
     PWR->CR |= PWR_CR_DBP;
     RTC->WPR = 0xCA;
-    RTC->WPR = 0x35;
+    RTC->WPR = 0x53;
 
     RCC->BDCR = RCC_BDCR_RTCEN      /* Enable RTC              */
               | RCC_BDCR_RTCSEL_0   /* Set LSE as clock source */
