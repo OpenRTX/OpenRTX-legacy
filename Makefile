@@ -170,7 +170,7 @@ LFLAGS   := -mcpu=cortex-m4 -mthumb -Wl,--gc-sections -Wl,-Map,main.map \
  	    $(OPTLEVEL) -nostdlib -Wl,-T./linkerscripts/linker_script.ld
 DFLAGS   := -MMD -MP
 
-LINK_LIBS := $(LIBS) -Wl,--start-group -lc -lgcc -Wl,--end-group
+LINK_LIBS := $(LIBS) -Wl,--start-group -lc -lgcc -lm -Wl,--end-group
 
 CC  := arm-none-eabi-gcc
 CXX := arm-none-eabi-g++
