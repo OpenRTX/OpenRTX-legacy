@@ -52,6 +52,7 @@ void blink(void *arg)
 
 int main (void)
 {
+    printf("** RTC testsuite** \r\n");
     gpio_setMode(GPIOE, 0, OUTPUT);
 
     xTaskCreate(blink, "blink", 256, NULL, 0, NULL);

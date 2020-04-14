@@ -26,6 +26,7 @@
  ***************************************************************************/
 
 #include "rtc.h"
+#include <stdio.h>
 
 void rtc_init()
 {
@@ -39,8 +40,10 @@ void rtc_init()
               | RCC_BDCR_RTCSEL_0   /* Set LSE as clock source */
               | RCC_BDCR_LSEON;     /* Enable LSE              */
 
+    printf("Starting LSE... ");
     /* Wait until external 32kHz crystal stabilises */
     while((RCC->BDCR & RCC_BDCR_LSERDY) == 0) ;
+    puts("OK\r");
 }
 
 void rtc_shutdown()
@@ -67,11 +70,13 @@ void rtc_setTime(curTime_t t)
     time &= RTC_TR_HT | RTC_TR_HU | RTC_TR_MNT | RTC_TR_MNU | RTC_TR_ST | RTC_TR_SU;
 
     /* Enter initialisation mode and update registers */
+    printf("Putting RTC in initialisation mode... ");
     RTC->ISR |= RTC_ISR_INIT;
     while((RTC->ISR & RTC_ISR_INITF) == 0) ;
     RTC->TR = time;
     RTC->DR = date;
     RTC->ISR &= ~RTC_ISR_INIT;
+    puts("OK\r");
 }
 
 void rtc_setHour(uint8_t hours, uint8_t minutes, uint8_t seconds)
