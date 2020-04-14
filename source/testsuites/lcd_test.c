@@ -51,26 +51,24 @@ void blink(void *arg)
     fillRect(80, 0, 20, SCREEN_HEIGHT, 0x07e0);
 
     char *buffer = "KEK";
-    printCore(32, 32, buffer, FONT_SIZE_1, TEXT_ALIGN_LEFT, 0x0000);
+    printCore(32, 32, buffer, FONT_SIZE_4, TEXT_ALIGN_LEFT, 0x0000);
 
     /* Example of split rendering, first render top half then bottom */
-    renderRows(4, 8);
-    renderRows(0, 4);
+    //renderRows(4, 8);
+    //renderRows(0, 4);
 
-    /* We could have called directly this otherwise
-    render(); */
+    /* We could have called directly this otherwise */
+    render();
 
     while(1)
     {
         gpio_togglePin(GPIOE, 0);
         vTaskDelay(500);
-
     }
 }
 
 int main (void)
 {
-
     gpio_setMode(GPIOE, 0, OUTPUT);
 
     xTaskCreate(blink, "blink", 256, NULL, 0, NULL);

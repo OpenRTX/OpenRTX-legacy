@@ -87,7 +87,7 @@ INLINE void renderRows(int16_t startRow, int16_t endRow)
 //INLINE void printCentered(uint8_t y, const  char *text, font_t fontSize);
 //INLINE void printAt(uint8_t x, uint8_t y,const  char *text, font_t fontSize);
 
-INLINE int printCore(int16_t x, int16_t y,const char *szMsg, font_t fontSize, textAlign_t alignment, uint16_t color)
+INLINE int printCore(int16_t x, int16_t y, const char *szMsg, font_t fontSize, textAlign_t alignment, uint16_t color)
 {
 	int16_t i, sLen;
 	uint8_t *currentCharData;
@@ -166,11 +166,14 @@ INLINE int printCore(int16_t x, int16_t y,const char *szMsg, font_t fontSize, te
 
 		currentCharData = (uint8_t *)&currentFont[8 + (charOffset * bytesPerChar)];
 
+        // We print the character from up-left to bottom right
         for(int16_t vscan=0; vscan < charHeightPixels; vscan++) {
             for(int16_t hscan=0; hscan < charWidthPixels; hscan++) {
-                int16_t bitIndex = hscan * charHeightPixels + vscan;
+                int16_t charChunk = vscan / 8;
+                int16_t bitIndex = (hscan + charChunk * charWidthPixels) * 8 +
+                                   vscan % 8;
                 int16_t byte = bitIndex >> 3;
-                int16_t bitMask = 0x80 >> (bitIndex & 7);
+                int16_t bitMask = 1 << (bitIndex & 7);
                 if (currentCharData[byte] & bitMask)
                     screenBuf[(y + vscan) * SCREEN_WIDTH +
                                x + hscan + i * charWidthPixels] = LE2BE(color);
