@@ -26,11 +26,12 @@
  ***************************************************************************/
 
 #include "rtc.h"
-#include <stdio.h>
+#include "FreeRTOS.h"
+#include "task.h"
 
 void rtc_init()
 {
-    /* Enable backup domain write protection */
+    /* Enable write protection for RTC registers */
     RCC->APB1ENR |= RCC_APB1ENR_PWREN;
     PWR->CR |= PWR_CR_DBP;
     RTC->WPR = 0xCA;
@@ -40,10 +41,8 @@ void rtc_init()
               | RCC_BDCR_RTCSEL_0   /* Set LSE as clock source */
               | RCC_BDCR_LSEON;     /* Enable LSE              */
 
-    printf("Starting LSE... ");
     /* Wait until external 32kHz crystal stabilises */
     while((RCC->BDCR & RCC_BDCR_LSERDY) == 0) ;
-    puts("OK\r");
 }
 
 void rtc_shutdown()
@@ -53,6 +52,12 @@ void rtc_shutdown()
 
 void rtc_setTime(curTime_t t)
 {
+    /*
+     * Convert values to BCD representation placing data in the correct
+     * positions for both time and date registers.
+     * Packing is done before updating registers, to minimise time spent with
+     * RTC in initialisation mode.
+     */
     uint32_t date = ((t.year  / 10) << 20)
                   | ((t.year  % 10) << 16)
                   | ((t.month / 10) << 12)
@@ -70,13 +75,13 @@ void rtc_setTime(curTime_t t)
     time &= RTC_TR_HT | RTC_TR_HU | RTC_TR_MNT | RTC_TR_MNU | RTC_TR_ST | RTC_TR_SU;
 
     /* Enter initialisation mode and update registers */
-    printf("Putting RTC in initialisation mode... ");
+    taskENTER_CRITICAL();
     RTC->ISR |= RTC_ISR_INIT;
     while((RTC->ISR & RTC_ISR_INITF) == 0) ;
     RTC->TR = time;
     RTC->DR = date;
     RTC->ISR &= ~RTC_ISR_INIT;
-    puts("OK\r");
+    taskEXIT_CRITICAL();
 }
 
 void rtc_setHour(uint8_t hours, uint8_t minutes, uint8_t seconds)
@@ -101,6 +106,10 @@ curTime_t rtc_getTime()
 {
     curTime_t t;
 
+    /*
+     * Obtain time and date values in BCD format from RTC registers, and fill
+     * the corresponding fields of the struct to be returned.
+     */
     uint32_t time = RTC->TR;
     t.hour   = ((time & RTC_TR_HT)  >> 20)*10 + ((time & RTC_TR_HU) >> 16);
     t.minute = ((time & RTC_TR_MNT) >> 12)*10 + ((time & RTC_TR_MNU) >> 8);
@@ -113,4 +122,23 @@ curTime_t rtc_getTime()
     t.date  = ((date & RTC_DR_DT)  >> 4)*10  + (date & RTC_DR_DU);
 
     return t;
+}
+
+void rtc_dstSet()
+{
+    /* If BKP bit is set, DST has been already set */
+    if(RTC->CR & RTC_CR_BCK) return;
+    taskENTER_CRITICAL();
+    RTC->CR |= RTC_CR_BCK | RTC_CR_ADD1H;
+    taskEXIT_CRITICAL();
+}
+
+void rtc_dstClear()
+{
+    /* If BKP bit is cleared, DST has been already removed */
+    if((RTC->CR & RTC_CR_BCK) == 0) return;
+    taskENTER_CRITICAL();
+    RTC->CR &= ~RTC_CR_BCK;
+    RTC->CR |= RTC_CR_SUB1H;
+    taskEXIT_CRITICAL();
 }
