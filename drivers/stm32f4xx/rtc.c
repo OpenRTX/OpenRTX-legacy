@@ -107,10 +107,10 @@ curTime_t rtc_getTime()
     t.second = ((time & RTC_TR_ST)  >> 4)*10  + (time & RTC_TR_SU);
 
     uint32_t date = RTC->DR;
-    t.year  = ((date & RTC_DR_YT)  >> 20)*10 + ((time & RTC_DR_YU) >> 16);
+    t.year  = ((date & RTC_DR_YT)  >> 20)*10 + ((date & RTC_DR_YU) >> 16);
     t.day   = ((date & RTC_DR_WDU) >> 13);
-    t.month = ((date & RTC_DR_MT)  >> 12)*10 + ((time & RTC_DR_MU) >> 8);
-    t.date  = ((date & RTC_DR_DT)  >> 4)*10  + (time & RTC_DR_DU);
+    t.month = ((date & RTC_DR_MT)  >> 12)*10 + ((date & RTC_DR_MU) >> 8);
+    t.date  = ((date & RTC_DR_DT)  >> 4)*10  + (date & RTC_DR_DU);
 
     return t;
 }

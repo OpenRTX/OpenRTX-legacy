@@ -37,8 +37,17 @@
 void blink(void *arg)
 {
     rtc_init();
-    rtc_setDate(14,4,2020);
-    rtc_setHour(17,40,0);
+//     rtc_setDate(14,4,2020);
+//     rtc_setHour(17,40,0);
+
+    curTime_t time;
+    time.date = 14;
+    time.month = 4;
+    time.year = 20;
+    time.hour = 18;
+    time.minute = 20;
+    time.second = 0;
+    rtc_setTime(time);
 
     while(1)
     {
