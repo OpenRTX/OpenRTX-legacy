@@ -47,7 +47,7 @@ void spiSend(uint16_t value)
         if(temp & 0x80000000) GPIOE->BSRRL = (1 << 5);  // Set data
         temp <<= 1;
         delayUs(1);
-        GPIOE->BSRRL = (1 << 5);                        // Set clock;
+        GPIOE->BSRRL = (1 << 3);                        // Set clock;
         delayUs(1);
     }
 }
