@@ -34,6 +34,23 @@
 #include "rtc.h"
 #include "gpio.h"
 #include "adc1.h"
+#include "delays.h"
+
+void spiSend(uint16_t value)
+{
+    uint16_t temp = value;
+
+    // PLL data is PE5, PLL clock is PE3
+    for(uint8_t i = 0; i < 16; i++)
+    {
+        GPIOE->BSRRH = (1 << 5) | (1 << 3);             // Clock low and clear data line
+        if(temp & 0x80000000) GPIOE->BSRRL = (1 << 5);  // Set data
+        temp <<= 1;
+        delayUs(1);
+        GPIOE->BSRRL = (1 << 5);                        // Set clock;
+        delayUs(1);
+    }
+}
 
 void task(void *arg)
 {
@@ -58,6 +75,59 @@ void task(void *arg)
     gpio_setMode(GPIOB, 9, OUTPUT);     // Turn on audio amplifier
     gpio_setPin(GPIOB, 9);
 
+    gpio_setMode(GPIOE, 3, OUTPUT);
+    gpio_setMode(GPIOE, 5, OUTPUT);
+    gpio_setMode(GPIOD, 11, OUTPUT);    // PLL cs
+    gpio_setPin(GPIOD, 11);
+    gpio_setMode(GPIOD, 12, INPUT);     // PLL lock
+
+    /* Divider register */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x0013);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+
+    /* Dividend MSB register */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x10CF);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+
+    /* Dividend LSB register */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x203D);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+
+    /* Reference frequency divider */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x5001);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+
+    /* Phase detector/charge pump register */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x000F);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+
+    /* Power down/multiplexer control register */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x7200);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
 
     adc1_init();
 
