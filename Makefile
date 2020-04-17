@@ -10,8 +10,7 @@ RADIO := MD380
 ##
 ## List here your source files (both .s, .c and .cpp)
 ##
-SRC := source/testsuites/rtc_test.c
-#source/main.c source/io/keyboard.c source/interfaces/pit.c
+SRC := source/testsuites/rtx_test.c
 
 ##
 ## Selection of MCU platform and baseband
