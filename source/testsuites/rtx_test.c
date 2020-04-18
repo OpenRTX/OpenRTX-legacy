@@ -97,18 +97,18 @@ void task(void *arg)
     gpio_setPin(GPIOD, 11);
     delayMs(1);
 
-    /* Dividend MSB register */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x10CF);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-
     /* Dividend LSB register */
     gpio_clearPin(GPIOD, 11);
     delayUs(10);
     spiSend(0x203D);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+
+    /* Dividend MSB register */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x10CF);
     delayUs(10);
     gpio_setPin(GPIOD, 11);
     delayMs(1);
