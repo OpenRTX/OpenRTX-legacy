@@ -43,13 +43,18 @@ void spiSend(uint16_t value)
     // PLL data is PE5, PLL clock is PE3
     for(uint8_t i = 0; i < 16; i++)
     {
-        GPIOE->BSRRH = (1 << 5) | (1 << 3);             // Clock low and clear data line
-        if(temp & 0x80000000) GPIOE->BSRRL = (1 << 5);  // Set data
+        gpio_clearPin(GPIOE, 3);
+        if(temp & 0x80000000)
+            gpio_setPin(GPIOE, 5);
+        else
+            gpio_clearPin(GPIOE, 5);
         temp <<= 1;
         delayUs(1);
-        GPIOE->BSRRL = (1 << 3);                        // Set clock;
+        gpio_setPin(GPIOE, 3);
         delayUs(1);
     }
+
+    gpio_clearPin(GPIOE, 3);
 }
 
 void task(void *arg)
@@ -79,7 +84,7 @@ void task(void *arg)
     gpio_setMode(GPIOE, 5, OUTPUT);
     gpio_setMode(GPIOD, 11, OUTPUT);    // PLL cs
     gpio_setPin(GPIOD, 11);
-    gpio_setMode(GPIOD, 12, INPUT);     // PLL lock
+    gpio_setMode(GPIOD, 10, INPUT);     // PLL lock
 
     /* Divider register */
     gpio_clearPin(GPIOD, 11);
@@ -133,7 +138,15 @@ void task(void *arg)
 
     while(1)
     {
-        printf("RSSI value: %f\r\n", adc1_getMeasurement(1));
+        printf("RSSI value: %f. Pll status: ", adc1_getMeasurement(1));
+        if(gpio_readPin(GPIOD, 10))
+        {
+            puts("locked\r");
+        }
+        else
+        {
+            puts("not locked\r");
+        }
         vTaskDelay(500);
     }
 }
