@@ -121,7 +121,7 @@ void task(void *arg)
     /* Phase detector/charge pump register */
     gpio_clearPin(GPIOD, 11);
     delayUs(10);
-    spiSend(0x000F);
+    spiSend(0x600F);
     delayUs(10);
     gpio_setPin(GPIOD, 11);
     delayMs(1);
