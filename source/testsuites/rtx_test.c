@@ -80,9 +80,6 @@ void task(void *arg)
     gpio_setMode(GPIOB, 9, OUTPUT);     // Turn on audio amplifier
     gpio_setPin(GPIOB, 9);
 
-    gpio_setMode(GPIOA, 5, OUTPUT);     // Set mod_bias to 0V
-    gpio_clearPin(GPIOA, 5);
-
     gpio_setMode(GPIOC, 7, OUTPUT);     // Set CTC/DCS_OUT to 0V
     gpio_clearPin(GPIOC, 7);
 
@@ -145,24 +142,10 @@ void task(void *arg)
 
     adc1_init();
 
-//     for(uint16_t g = 0x6000; g < 0x601F; g++)
-//     {
-//         printf("Testing PLL gain %d: ", g & 0x00FF);
-//         gpio_clearPin(GPIOD, 11);
-//         delayUs(10);
-//         spiSend(g);
-//         delayUs(10);
-//         gpio_setPin(GPIOD, 11);
-//         vTaskDelay(500);
-//         if(gpio_readPin(GPIOD, 10))
-//         {
-//             puts("locked\r");
-//         }
-//         else
-//         {
-//             puts("not locked\r");
-//         }
-//     }
+    gpio_setMode(GPIOA, 5, INPUT_ANALOG);   // DAC requires analog connection
+    RCC->APB1ENR |= RCC_APB1ENR_DACEN;
+    DAC->CR = DAC_CR_EN2;
+    DAC->DHR12R2 = 33;                      // ~20mV of mod2_bias
 
     while(1)
     {
