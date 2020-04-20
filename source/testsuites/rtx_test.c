@@ -123,6 +123,8 @@ void configurePdGain(uint8_t gain)
 
 void task(void *arg)
 {
+    delayMs(4000);
+
     gpio_setMode(GPIOA, 9, OUTPUT);     // VCOVCC should be high when receiving
     gpio_setPin(GPIOA, 9);              // (see page 6 of schematic)
 
