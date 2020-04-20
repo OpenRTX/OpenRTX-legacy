@@ -35,6 +35,13 @@
 #include "gpio.h"
 #include "adc1.h"
 #include "delays.h"
+#include <math.h>
+
+#define VCO_FREQ 430100000.0F
+#define REF_CLK 16800000.0F
+
+#define PHD_GAIN 0x0F   // Phase detector gain: hex value, max 0x1F
+#define REFCLK_DIV 2    // Reference clock divider
 
 void spiSend(uint16_t value)
 {
@@ -55,6 +62,63 @@ void spiSend(uint16_t value)
     }
 
     gpio_clearPin(GPIOE, 3);
+}
+
+void configurePll(float fvco, uint8_t clkDiv)
+{
+    float K = fvco/(REF_CLK/((float) clkDiv));
+    float Ndiv = round(K) - 32.0;
+    float Nfrac = round(262144*(K - Ndiv - 32.0));
+
+    uint16_t divider = ((uint16_t) Ndiv);
+    uint16_t nf = ((uint16_t) Nfrac);
+    uint16_t divMsb = nf >> 8;
+    uint16_t divLsb = nf & 0x000F;
+
+    /* Divider register */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(divider);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+
+    /* Dividend LSB register */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x2000 | divLsb);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+
+    /* Dividend MSB register */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x1000 | divMsb);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+
+    /* Reference frequency divider */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x5000 | ((uint16_t)clkDiv - 1));
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+
+    printf("PLL settings: - Ndiv: %f (%d)\n- Nfrac: %f (%d)\n", Ndiv, divider,
+           Nfrac, nf);
+}
+
+void configurePdGain(uint8_t gain)
+{
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x6000 | (gain & 0x001F));
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
 }
 
 void task(void *arg)
@@ -86,51 +150,51 @@ void task(void *arg)
     gpio_setMode(GPIOA, 13, OUTPUT);    // Activate W/N switch
     gpio_setPin(GPIOA, 13);
 
-    gpio_setMode(GPIOE, 3, OUTPUT);
-    gpio_setMode(GPIOE, 5, OUTPUT);
+    gpio_setMode(GPIOE, 3, OUTPUT);     // PLL clock
+    gpio_setMode(GPIOE, 5, OUTPUT);     // PLL data
     gpio_setMode(GPIOD, 11, OUTPUT);    // PLL cs
     gpio_setPin(GPIOD, 11);
     gpio_setMode(GPIOD, 10, INPUT);     // PLL lock
 
-    /* Divider register */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x0013);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
+//     /* Divider register */
+//     gpio_clearPin(GPIOD, 11);
+//     delayUs(10);
+//     spiSend(0x0013);
+//     delayUs(10);
+//     gpio_setPin(GPIOD, 11);
+//     delayMs(1);
+// 
+//     /* Dividend LSB register */
+//     gpio_clearPin(GPIOD, 11);
+//     delayUs(10);
+//     spiSend(0x20BA);
+//     delayUs(10);
+//     gpio_setPin(GPIOD, 11);
+//     delayMs(1);
+// 
+//     /* Dividend MSB register */
+//     gpio_clearPin(GPIOD, 11);
+//     delayUs(10);
+//     spiSend(0x1061);
+//     delayUs(10);
+//     gpio_setPin(GPIOD, 11);
+//     delayMs(1);
+// 
+//     /* Reference frequency divider */
+//     gpio_clearPin(GPIOD, 11);
+//     delayUs(10);
+//     spiSend(0x5001);
+//     delayUs(10);
+//     gpio_setPin(GPIOD, 11);
+//     delayMs(1);
 
-    /* Dividend LSB register */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x20BA);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-
-    /* Dividend MSB register */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x1061);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-
-    /* Reference frequency divider */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x5001);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-
-    /* Phase detector/charge pump register */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x600F);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
+//     /* Phase detector/charge pump register */
+//     gpio_clearPin(GPIOD, 11);
+//     delayUs(10);
+//     spiSend(0x6000 | (PHD_GAIN & 0x001F));
+//     delayUs(10);
+//     gpio_setPin(GPIOD, 11);
+//     delayMs(1);
 
     /* Power down/multiplexer control register */
     gpio_clearPin(GPIOD, 11);
@@ -147,19 +211,40 @@ void task(void *arg)
     DAC->CR = DAC_CR_EN2;
     DAC->DHR12R2 = 0;                       // 0V of mod2_bias
 
-    while(1)
+    for(uint8_t ratio = 2; ratio <= 16; ratio++)
     {
-        printf("RSSI value: %f. Pll status: ", adc1_getMeasurement(1));
-        if(gpio_readPin(GPIOD, 10))
+        configurePll(VCO_FREQ, ratio);
+        for(uint8_t gain = 1; gain <= 31; gain++)
         {
-            puts("locked\r");
+            configurePdGain(gain);
+            vTaskDelay(1000);
+
+            printf("Prediv ratio %d, p. detect. gain %d. Pll status: ", ratio, gain);
+            if(gpio_readPin(GPIOD, 10))
+            {
+                puts("locked\r");
+            }
+            else
+            {
+                puts("not locked\r");
+            }
         }
-        else
-        {
-            puts("not locked\r");
-        }
-        vTaskDelay(500);
+        puts("\r");
     }
+
+//     while(1)
+//     {
+//         printf("RSSI value: %f. Pll status: ", adc1_getMeasurement(1));
+//         if(gpio_readPin(GPIOD, 10))
+//         {
+//             puts("locked\r");
+//         }
+//         else
+//         {
+//             puts("not locked\r");
+//         }
+//         vTaskDelay(500);
+//     }
 }
 
 int main (void)
