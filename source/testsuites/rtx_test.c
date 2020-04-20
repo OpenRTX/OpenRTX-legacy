@@ -103,7 +103,7 @@ void task(void *arg)
     /* Dividend LSB register */
     gpio_clearPin(GPIOD, 11);
     delayUs(10);
-    spiSend(0x203D);
+    spiSend(0x20BA);
     delayUs(10);
     gpio_setPin(GPIOD, 11);
     delayMs(1);
@@ -111,7 +111,7 @@ void task(void *arg)
     /* Dividend MSB register */
     gpio_clearPin(GPIOD, 11);
     delayUs(10);
-    spiSend(0x10CF);
+    spiSend(0x1061);
     delayUs(10);
     gpio_setPin(GPIOD, 11);
     delayMs(1);
@@ -145,7 +145,7 @@ void task(void *arg)
     gpio_setMode(GPIOA, 5, INPUT_ANALOG);   // DAC requires analog connection
     RCC->APB1ENR |= RCC_APB1ENR_DACEN;
     DAC->CR = DAC_CR_EN2;
-    DAC->DHR12R2 = 1024;                      // ~825mV of mod2_bias
+    DAC->DHR12R2 = 0;                       // 0V of mod2_bias
 
     while(1)
     {
