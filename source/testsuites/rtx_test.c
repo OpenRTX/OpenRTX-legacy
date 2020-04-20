@@ -145,7 +145,7 @@ void task(void *arg)
     gpio_setMode(GPIOA, 5, INPUT_ANALOG);   // DAC requires analog connection
     RCC->APB1ENR |= RCC_APB1ENR_DACEN;
     DAC->CR = DAC_CR_EN2;
-    DAC->DHR12R2 = 33;                      // ~20mV of mod2_bias
+    DAC->DHR12R2 = 1024;                      // ~825mV of mod2_bias
 
     while(1)
     {
