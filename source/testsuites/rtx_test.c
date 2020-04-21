@@ -158,6 +158,8 @@ void task(void *arg)
     gpio_setPin(GPIOD, 11);
     gpio_setMode(GPIOD, 10, INPUT);     // PLL lock
 
+    gpio_setMode(GPIOE, 0, OUTPUT);     // LED
+
 //     /* Divider register */
 //     gpio_clearPin(GPIOD, 11);
 //     delayUs(10);
@@ -219,12 +221,16 @@ void task(void *arg)
     uint8_t cnt = 0;
     while(1)
     {
-        if(cnt % 2)
+        if(cnt % 2) {
+            gpio_setPin(GPIOE, 0);
             DAC->DHR12R2 = 0;
-        else
+        }
+        else {
+            gpio_clearPin(GPIOE, 0);
             DAC->DHR12R2 = 0x026C;   // ~500mV of mod2_bias
+        }
         cnt++;
-        vTaskDelay(2000);
+        delayMs(2000);
     }
 }
 
