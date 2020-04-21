@@ -198,6 +198,9 @@ void task(void *arg)
 //     gpio_setPin(GPIOD, 11);
 //     delayMs(1);
 
+    configurePll(VCO_FREQ, 2);
+    configurePdGain(15);
+
     /* Power down/multiplexer control register */
     gpio_clearPin(GPIOD, 11);
     delayUs(10);
@@ -213,40 +216,16 @@ void task(void *arg)
     DAC->CR = DAC_CR_EN2;
     DAC->DHR12R2 = 0;                       // 0V of mod2_bias
 
-    for(uint8_t ratio = 2; ratio <= 16; ratio++)
+    uint8_t cnt = 0;
+    while(1)
     {
-        configurePll(VCO_FREQ, ratio);
-        for(uint8_t gain = 1; gain <= 31; gain++)
-        {
-            configurePdGain(gain);
-            vTaskDelay(1000);
-
-            printf("Prediv ratio %d, p. detect. gain %d. Pll status: ", ratio, gain);
-            if(gpio_readPin(GPIOD, 10))
-            {
-                puts("locked\r");
-            }
-            else
-            {
-                puts("not locked\r");
-            }
-        }
-        puts("\r");
+        if(cnt % 2)
+            DAC->DHR12R2 = 0;
+        else
+            DAC->DHR12R2 = 0x026C;   // ~500mV of mod2_bias
+        cnt++;
+        vTaskDelay(2000);
     }
-
-//     while(1)
-//     {
-//         printf("RSSI value: %f. Pll status: ", adc1_getMeasurement(1));
-//         if(gpio_readPin(GPIOD, 10))
-//         {
-//             puts("locked\r");
-//         }
-//         else
-//         {
-//             puts("not locked\r");
-//         }
-//         vTaskDelay(500);
-//     }
 }
 
 int main (void)
