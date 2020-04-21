@@ -51,7 +51,7 @@ void spiSend(uint16_t value)
     for(uint8_t i = 0; i < 16; i++)
     {
         gpio_clearPin(GPIOE, 3);
-        if(temp & 0x80000000)
+        if(temp & 0x8000)
             gpio_setPin(GPIOE, 5);
         else
             gpio_clearPin(GPIOE, 5);
@@ -201,7 +201,7 @@ void task(void *arg)
 //     delayMs(1);
 
     configurePll(VCO_FREQ, 2);
-    configurePdGain(15);
+    configurePdGain(8);
 
     /* Power down/multiplexer control register */
     gpio_clearPin(GPIOD, 11);
@@ -218,18 +218,8 @@ void task(void *arg)
     DAC->CR = DAC_CR_EN2;
     DAC->DHR12R2 = 0;                       // 0V of mod2_bias
 
-    uint8_t cnt = 0;
     while(1)
     {
-        if(cnt % 2) {
-            gpio_setPin(GPIOE, 0);
-            DAC->DHR12R2 = 0;
-        }
-        else {
-            gpio_clearPin(GPIOE, 0);
-            DAC->DHR12R2 = 0x026C;   // ~500mV of mod2_bias
-        }
-        cnt++;
         delayMs(2000);
     }
 }
