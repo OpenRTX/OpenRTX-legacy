@@ -102,7 +102,7 @@ void configurePll(float fvco, uint8_t clkDiv)
     /* Reference frequency divider */
     gpio_clearPin(GPIOD, 11);
     delayUs(10);
-    spiSend(0x5000 | ((uint16_t)clkDiv - 1));
+    spiSend(0x5002);//((uint16_t)clkDiv - 1));
     delayUs(10);
     gpio_setPin(GPIOD, 11);
     delayMs(1);
@@ -115,7 +115,7 @@ void configurePdGain(uint8_t gain)
 {
     gpio_clearPin(GPIOD, 11);
     delayUs(10);
-    spiSend(0x6000 | (gain & 0x001F));
+    spiSend(0x6000 | ((uint16_t) gain));
     delayUs(10);
     gpio_setPin(GPIOD, 11);
     delayMs(1);
@@ -166,7 +166,14 @@ void task(void *arg)
     /* Power down/multiplexer control register */
     gpio_clearPin(GPIOD, 11);
     delayUs(10);
-    spiSend(0x7200);
+    spiSend(0x7340);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+    
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0xE080);
     delayUs(10);
     gpio_setPin(GPIOD, 11);
     delayMs(1);
@@ -183,7 +190,7 @@ void task(void *arg)
         printf("Setting gain to %d. PLL status: ", gain);
         configurePdGain(gain);
         delayMs(2000);
-        if(gpio_readValue(GPIOD, 10))
+        if(gpio_readPin(GPIOD, 10))
         {
             puts("locked.\r");
         }
