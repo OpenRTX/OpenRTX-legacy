@@ -67,13 +67,13 @@ void spiSend(uint16_t value)
 void configurePll(float fvco, uint8_t clkDiv)
 {
     float K = fvco/(REF_CLK/((float) clkDiv));
-    float Ndiv = round(K) - 32.0;
+    float Ndiv = floor(K) - 32.0;
     float Nfrac = round(262144*(K - Ndiv - 32.0));
 
     uint16_t divider = ((uint16_t) Ndiv);
     uint16_t nf = ((uint16_t) Nfrac);
     uint16_t divMsb = nf >> 8;
-    uint16_t divLsb = nf & 0x000F;
+    uint16_t divLsb = nf & 0x00FF;
 
     /* Divider register */
     gpio_clearPin(GPIOD, 11);
