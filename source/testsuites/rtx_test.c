@@ -161,7 +161,7 @@ void task(void *arg)
     gpio_setMode(GPIOE, 0, OUTPUT);     // LED
 
     configurePll(VCO_FREQ, 2);
-//     configurePdGain(8);
+    configurePdGain(0x1F);
 
     /* Power down/multiplexer control register */
     gpio_clearPin(GPIOD, 11);
@@ -185,24 +185,21 @@ void task(void *arg)
     DAC->CR = DAC_CR_EN2;
     DAC->DHR12R2 = 0;                       // 0V of mod2_bias
 
-    for(uint8_t gain = 1; gain <= 0x1f; gain++)
+    uint8_t cnt = 0;
+    while(1)
     {
-        printf("Setting gain to %d. PLL status: ", gain);
-        configurePdGain(gain);
-        delayMs(2000);
-        if(gpio_readPin(GPIOD, 10))
+        if(cnt%2)
         {
-            puts("locked.\r");
+            configurePll(430300000, 2); //430.300MHz
+            gpio_setPin(GPIOE, 0);
         }
         else
         {
-            puts("not locked.\r");
+            configurePll(430100000, 2); //430.100MHz
+            gpio_clearPin(GPIOE, 0);
         }
-    }
-    
-    while(1)
-    {
-        delayMs(2000);
+        delayMs(10000);
+        cnt++;
     }
 }
 
