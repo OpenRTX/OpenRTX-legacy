@@ -160,48 +160,8 @@ void task(void *arg)
 
     gpio_setMode(GPIOE, 0, OUTPUT);     // LED
 
-//     /* Divider register */
-//     gpio_clearPin(GPIOD, 11);
-//     delayUs(10);
-//     spiSend(0x0013);
-//     delayUs(10);
-//     gpio_setPin(GPIOD, 11);
-//     delayMs(1);
-// 
-//     /* Dividend LSB register */
-//     gpio_clearPin(GPIOD, 11);
-//     delayUs(10);
-//     spiSend(0x20BA);
-//     delayUs(10);
-//     gpio_setPin(GPIOD, 11);
-//     delayMs(1);
-// 
-//     /* Dividend MSB register */
-//     gpio_clearPin(GPIOD, 11);
-//     delayUs(10);
-//     spiSend(0x1061);
-//     delayUs(10);
-//     gpio_setPin(GPIOD, 11);
-//     delayMs(1);
-// 
-//     /* Reference frequency divider */
-//     gpio_clearPin(GPIOD, 11);
-//     delayUs(10);
-//     spiSend(0x5001);
-//     delayUs(10);
-//     gpio_setPin(GPIOD, 11);
-//     delayMs(1);
-
-//     /* Phase detector/charge pump register */
-//     gpio_clearPin(GPIOD, 11);
-//     delayUs(10);
-//     spiSend(0x6000 | (PHD_GAIN & 0x001F));
-//     delayUs(10);
-//     gpio_setPin(GPIOD, 11);
-//     delayMs(1);
-
     configurePll(VCO_FREQ, 2);
-    configurePdGain(8);
+//     configurePdGain(8);
 
     /* Power down/multiplexer control register */
     gpio_clearPin(GPIOD, 11);
@@ -218,6 +178,21 @@ void task(void *arg)
     DAC->CR = DAC_CR_EN2;
     DAC->DHR12R2 = 0;                       // 0V of mod2_bias
 
+    for(uint8_t gain = 1; gain <= 0x1f; gain++)
+    {
+        printf("Setting gain to %d. PLL status: ", gain);
+        configurePdGain(gain);
+        delayMs(2000);
+        if(gpio_readValue(GPIOD, 10))
+        {
+            puts("locked.\r");
+        }
+        else
+        {
+            puts("not locked.\r");
+        }
+    }
+    
     while(1)
     {
         delayMs(2000);
