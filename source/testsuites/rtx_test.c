@@ -47,21 +47,21 @@ void spiSend(uint16_t value)
 {
     uint16_t temp = value;
 
-    // PLL data is PE5, PLL clock is PE3
+    // PLL data is PE5, PLL clock is PE4
     for(uint8_t i = 0; i < 16; i++)
     {
-        gpio_clearPin(GPIOE, 3);
+        gpio_clearPin(GPIOE, 4);
         if(temp & 0x8000)
             gpio_setPin(GPIOE, 5);
         else
             gpio_clearPin(GPIOE, 5);
         temp <<= 1;
         delayUs(1);
-        gpio_setPin(GPIOE, 3);
+        gpio_setPin(GPIOE, 4);
         delayUs(1);
     }
 
-    gpio_clearPin(GPIOE, 3);
+    gpio_clearPin(GPIOE, 4);
 }
 
 void configurePll(float fvco, uint8_t clkDiv)
@@ -152,7 +152,7 @@ void task(void *arg)
     gpio_setMode(GPIOA, 13, OUTPUT);    // Activate W/N switch
     gpio_setPin(GPIOA, 13);
 
-    gpio_setMode(GPIOE, 3, OUTPUT);     // PLL clock
+    gpio_setMode(GPIOE, 4, OUTPUT);     // PLL clock
     gpio_setMode(GPIOE, 5, OUTPUT);     // PLL data
     gpio_setMode(GPIOD, 11, OUTPUT);    // PLL cs
     gpio_setPin(GPIOD, 11);
@@ -185,22 +185,22 @@ void task(void *arg)
     DAC->CR = DAC_CR_EN2;
     DAC->DHR12R2 = 0;                       // 0V of mod2_bias
 
-    uint8_t cnt = 0;
-    while(1)
-    {
-        if(cnt%2)
-        {
-            configurePll(430300000, 2); //430.300MHz
-            gpio_setPin(GPIOE, 0);
-        }
-        else
-        {
+//     uint8_t cnt = 0;
+//     while(1)
+//     {
+//         if(cnt%2)
+//         {
+//             configurePll(430300000, 2); //430.300MHz
+//             gpio_setPin(GPIOE, 0);
+//         }
+//         else
+//         {
             configurePll(430100000, 2); //430.100MHz
-            gpio_clearPin(GPIOE, 0);
-        }
-        delayMs(10000);
-        cnt++;
-    }
+//             gpio_clearPin(GPIOE, 0);
+//         }
+//         delayMs(10000);
+//         cnt++;
+//     }
 }
 
 int main (void)
