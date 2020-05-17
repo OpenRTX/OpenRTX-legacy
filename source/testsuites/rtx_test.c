@@ -196,6 +196,13 @@ void task(void *arg)
 //         else
 //         {
             configurePll(430100000, 2); //430.100MHz
+
+            while(1)
+            {
+                if(gpio_readPin(GPIOD, 10) == 1) puts("PLL LOCK!\r");
+                delayMs(10000);
+            }
+            
 //             gpio_clearPin(GPIOE, 0);
 //         }
 //         delayMs(10000);
