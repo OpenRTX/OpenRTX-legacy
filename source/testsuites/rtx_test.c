@@ -50,18 +50,19 @@ void spiSend(uint16_t value)
     // PLL data is PE5, PLL clock is PE4
     for(uint8_t i = 0; i < 16; i++)
     {
-        gpio_clearPin(GPIOE, 4);
+        gpio_setPin(GPIOE, 4);
+        delayUs(1);
         if(temp & 0x8000)
             gpio_setPin(GPIOE, 5);
         else
             gpio_clearPin(GPIOE, 5);
         temp <<= 1;
         delayUs(1);
-        gpio_setPin(GPIOE, 4);
+        gpio_clearPin(GPIOE, 4);
         delayUs(1);
     }
 
-    gpio_clearPin(GPIOE, 4);
+    gpio_setPin(GPIOE, 4);
 }
 
 void configurePll(float fvco, uint8_t clkDiv)
@@ -102,7 +103,7 @@ void configurePll(float fvco, uint8_t clkDiv)
     /* Reference frequency divider */
     gpio_clearPin(GPIOD, 11);
     delayUs(10);
-    spiSend(0x5002);//((uint16_t)clkDiv - 1));
+    spiSend(0x5003);//((uint16_t)clkDiv - 1));
     delayUs(10);
     gpio_setPin(GPIOD, 11);
     delayMs(1);
@@ -160,24 +161,34 @@ void task(void *arg)
 
     gpio_setMode(GPIOE, 0, OUTPUT);     // LED
 
-    configurePll(VCO_FREQ, 2);
+    configurePll(VCO_FREQ, 4);
     configurePdGain(0x1F);
 
     /* Power down/multiplexer control register */
     gpio_clearPin(GPIOD, 11);
     delayUs(10);
-    spiSend(0x7340);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-    
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0xE080);
+    spiSend(0x73D0);
     delayUs(10);
     gpio_setPin(GPIOD, 11);
     delayMs(1);
 
+    /* Modulation control */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x8000);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+
+    /* Modulation control */
+    gpio_clearPin(GPIOD, 11);
+    delayUs(10);
+    spiSend(0x9000);
+    delayUs(10);
+    gpio_setPin(GPIOD, 11);
+    delayMs(1);
+
+    
     adc1_init();
 
     gpio_setMode(GPIOA, 5, INPUT_ANALOG);   // DAC requires analog connection
@@ -195,7 +206,7 @@ void task(void *arg)
 //         }
 //         else
 //         {
-            configurePll(430100000, 2); //430.100MHz
+            configurePll(430100000, 4); //430.100MHz
 
             while(1)
             {
