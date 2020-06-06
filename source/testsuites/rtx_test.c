@@ -188,13 +188,14 @@ void task(void *arg)
     gpio_setPin(GPIOD, 11);
     delayMs(1);
 
-    
     adc1_init();
 
-    gpio_setMode(GPIOA, 5, INPUT_ANALOG);   // DAC requires analog connection
+    gpio_setMode(GPIOA, 4, INPUT_ANALOG);   // DAC requires analog connection
+    gpio_setMode(GPIOA, 5, INPUT_ANALOG);
     RCC->APB1ENR |= RCC_APB1ENR_DACEN;
-    DAC->CR = DAC_CR_EN2;
-    DAC->DHR12R2 = 0;                       // 0V of mod2_bias
+    DAC->CR = DAC_CR_EN2 | DAC_CR_EN1;
+    DAC->DHR12R2 = 0;                       // 0V to MOD2_BIAS
+    DAC->DHR12R1 = 0xFFF;                   // 1.65V to APC/TV
 
 //     uint8_t cnt = 0;
 //     while(1)
