@@ -163,13 +163,14 @@ endif
 ## Replaces both "foo.cpp"-->"foo.o" and "foo.c"-->"foo.o"
 OBJ := $(addsuffix .o, $(basename $(ALL_SRC)))
 
-CXXFLAGS := $(ALL_INC) -mcpu=cortex-m4 -mthumb -mfloat-abi=softfp $(CONFIGS) \
-            $(DEFINES) $(EXCEPT) -c -g -std=c++11
-CFLAGS   := $(ALL_INC) -mcpu=cortex-m4 -mthumb -mfloat-abi=softfp $(CONFIGS) \
-            $(DEFINES) $(EXCEPT) -c -g
-AFLAGS   := -mcpu=cortex-m4 -mthumb
-LFLAGS   := -mcpu=cortex-m4 -mthumb -Wl,--gc-sections -Wl,-Map,main.map \
- 	    $(OPTLEVEL) -nostdlib -Wl,-T./linkerscripts/linker_script.ld
+CXXFLAGS := $(ALL_INC) -mcpu=cortex-m4 -mthumb -mfloat-abi=hard \
+            -mfpu=fpv4-sp-d16 $(CONFIGS) $(DEFINES) $(EXCEPT) -c -g -std=c++11
+CFLAGS   := $(ALL_INC) -mcpu=cortex-m4 -mthumb -mfloat-abi=hard \
+            -mfpu=fpv4-sp-d16 $(CONFIGS) $(DEFINES) $(EXCEPT) -c -g
+AFLAGS   := -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
+LFLAGS   := -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
+            -Wl,--gc-sections -Wl,-Map,main.map $(OPTLEVEL) -nostdlib \
+            -Wl,-T./linkerscripts/linker_script.ld
 DFLAGS   := -MMD -MP
 
 LINK_LIBS := $(LIBS) -Wl,--start-group -lc -lgcc -lm -Wl,--end-group
