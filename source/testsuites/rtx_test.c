@@ -37,11 +37,12 @@
 #include "delays.h"
 #include <math.h>
 
-#define VCO_FREQ 430100000.0F
-#define REF_CLK 16800000.0F
+#define REF_CLK 16800000.0F  // Reference clock: 16.8MHz
+#define PHD_GAIN 0x1F        // Phase detector gain: hex value, max 0x1F
+#define REFCLK_DIV 5         // Reference clock divider
+#define IF_FREQ 49950000.0F  // Intermediate frequency: 49.95MHz
 
-#define PHD_GAIN 0x0F   // Phase detector gain: hex value, max 0x1F
-#define REFCLK_DIV 2    // Reference clock divider
+#define OFFSET 10000.0F      // Roughly 10kHz of offset
 
 void spiSend(uint16_t value)
 {
@@ -67,14 +68,18 @@ void spiSend(uint16_t value)
 
 void configurePll(float fvco, uint8_t clkDiv)
 {
-    float K = fvco/(REF_CLK/((float) clkDiv));
+    float freq = fvco - IF_FREQ;
+    float K = freq/(REF_CLK/((float) clkDiv));
     float Ndiv = floor(K) - 32.0;
     float Nfrac = round(262144*(K - Ndiv - 32.0));
 
     uint16_t divider = ((uint16_t) Ndiv);
-    uint16_t nf = ((uint16_t) Nfrac);
+    uint32_t nf = ((uint32_t) Nfrac);
     uint16_t divMsb = nf >> 8;
     uint16_t divLsb = nf & 0x00FF;
+
+    printf("Configuring PLL.\r\n- Fvco %.2f\r\n- Divider %x\r\n- Frac %x\r\n",
+           fvco, divider, nf);
 
     /* Divider register */
     gpio_clearPin(GPIOD, 11);
@@ -103,13 +108,10 @@ void configurePll(float fvco, uint8_t clkDiv)
     /* Reference frequency divider */
     gpio_clearPin(GPIOD, 11);
     delayUs(10);
-    spiSend(0x5003);//((uint16_t)clkDiv - 1));
+    spiSend(0x5000 | ((uint16_t)clkDiv - 1));
     delayUs(10);
     gpio_setPin(GPIOD, 11);
     delayMs(1);
-
-    printf("PLL settings: - Ndiv: %f (%d)\n- Nfrac: %f (%d)\n", Ndiv, divider,
-           Nfrac, nf);
 }
 
 void configurePdGain(uint8_t gain)
@@ -126,20 +128,20 @@ void task(void *arg)
 {
     delayMs(4000);
 
-    gpio_setMode(GPIOA, 9, OUTPUT);     // VCOVCC should be high when receiving
-    gpio_setPin(GPIOA, 9);              // (see page 6 of schematic)
-
     gpio_setMode(GPIOA, 8, OUTPUT);     // Turn on VCO power supply
     gpio_setPin(GPIOA, 8);
 
-    gpio_setMode(GPIOC, 9, OUTPUT);     // Turn on RX front-end power supply
-    gpio_setPin(GPIOC, 9);
+    gpio_setMode(GPIOA, 9, OUTPUT);     // VCOVCC should be high when receiving
+    gpio_setPin(GPIOA, 9);              // (see page 6 of schematic)
 
-    gpio_setMode(GPIOB, 2, OUTPUT);     // Turn on AF amplifier
+    gpio_setMode(GPIOA, 10, OUTPUT);    // Clear DMR_SW
+    gpio_clearPin(GPIOA, 10);
+
+    gpio_setMode(GPIOA, 13, OUTPUT);    // Clear W/N switch
+    gpio_clearPin(GPIOA, 13);
+
+    gpio_setMode(GPIOB, 2, OUTPUT);     // Turn on AF amplifier (FM_SW)
     gpio_setPin(GPIOB, 2);
-
-    gpio_setMode(GPIOE, 13, OUTPUT);    // Unmute path from AF_out to speaker
-    gpio_setPin(GPIOE, 13);
 
     gpio_setMode(GPIOB, 8, OUTPUT);     // Turn on speaker
     gpio_clearPin(GPIOB, 8);
@@ -147,11 +149,30 @@ void task(void *arg)
     gpio_setMode(GPIOB, 9, OUTPUT);     // Turn on audio amplifier
     gpio_setPin(GPIOB, 9);
 
+    gpio_setMode(GPIOB, 12, OUTPUT);    // V_CS high
+    gpio_setPin(GPIOB, 12);
+
+    gpio_setMode(GPIOC, 4, OUTPUT);     // RF_APC_SW low
+    gpio_clearPin(GPIOC, 4);
+
+    gpio_setMode(GPIOC, 5, OUTPUT);     // Turn off TX front-end power supply
+    gpio_clearPin(GPIOC, 5);
+
     gpio_setMode(GPIOC, 7, OUTPUT);     // Set CTC/DCS_OUT to 0V
     gpio_clearPin(GPIOC, 7);
 
-    gpio_setMode(GPIOA, 13, OUTPUT);    // Activate W/N switch
-    gpio_setPin(GPIOA, 13);
+    gpio_setMode(GPIOC, 9, OUTPUT);
+    gpio_clearPin(GPIOC, 9);
+
+    gpio_setMode(GPIOE, 2, OUTPUT);     // DMR_CS high
+    gpio_setPin(GPIOE, 2);
+
+    gpio_setMode(GPIOE, 6, OUTPUT);     // Put DMR baseband in sleep
+    gpio_setPin(GPIOE, 6);
+
+    gpio_setMode(GPIOE, 13, OUTPUT);    // Unmute path from AF_out to speaker
+    gpio_setPin(GPIOE, 13);
+
 
     gpio_setMode(GPIOE, 4, OUTPUT);     // PLL clock
     gpio_setMode(GPIOE, 5, OUTPUT);     // PLL data
@@ -161,7 +182,6 @@ void task(void *arg)
 
     gpio_setMode(GPIOE, 0, OUTPUT);     // LED
 
-    configurePll(VCO_FREQ, 4);
     configurePdGain(0x1F);
 
     /* Power down/multiplexer control register */
@@ -192,34 +212,23 @@ void task(void *arg)
 
     gpio_setMode(GPIOA, 4, INPUT_ANALOG);   // DAC requires analog connection
     gpio_setMode(GPIOA, 5, INPUT_ANALOG);
+
     RCC->APB1ENR |= RCC_APB1ENR_DACEN;
     DAC->CR = DAC_CR_EN2 | DAC_CR_EN1;
-    DAC->DHR12R2 = 0;                       // 0V to MOD2_BIAS
-    DAC->DHR12R1 = 0xFFF;                   // 1.65V to APC/TV
+    DAC->DHR12R2 = 0x3e8;                   // 0V to MOD2_BIAS
+    DAC->DHR12R1 = 0x956;                   // APC/TV voltage
 
-//     uint8_t cnt = 0;
-//     while(1)
-//     {
-//         if(cnt%2)
-//         {
-//             configurePll(430300000, 2); //430.300MHz
-//             gpio_setPin(GPIOE, 0);
-//         }
-//         else
-//         {
-            configurePll(430100000, 4); //430.100MHz
+    configurePll(430100000, REFCLK_DIV);    // 430.100MHz
+    gpio_setPin(GPIOC, 9);                  // Turn on RX front-end power supply
 
-            while(1)
-            {
-                if(gpio_readPin(GPIOD, 10) == 1) puts("PLL LOCK!\r");
-                delayMs(10000);
-            }
-            
-//             gpio_clearPin(GPIOE, 0);
-//         }
-//         delayMs(10000);
-//         cnt++;
-//     }
+    while(1)
+    {
+        gpio_togglePin(GPIOE, 0);
+        if(gpio_readPin(GPIOD, 10) == 1) puts("PLL LOCK!\r");
+        printf("RSSI %.3f\r\n", adc1_getMeasurement(1));
+        delayMs(5000);
+    }
+
 }
 
 int main (void)
