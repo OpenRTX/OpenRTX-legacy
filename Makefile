@@ -52,7 +52,7 @@ endif
 ifeq "$(PLATFORM)" "FSL"
 DRIVERS_INC := -Idrivers/fsl
 else ifeq "$(PLATFORM)" "STM32F4XX"
-DRIVERS_INC := -Idrivers/stm32f4xx -Idrivers/stm32f4xx/usb
+DRIVERS_INC := -Idrivers/stm32f4xx -Idrivers/stm32f4xx/usb -Idrivers/md380
 DRIVERS_SRC := \
 drivers/stm32f4xx/usb/usb_bsp.c       \
 drivers/stm32f4xx/usb/usb_core.c      \
@@ -68,7 +68,8 @@ drivers/stm32f4xx/usb_vcom.c          \
 drivers/stm32f4xx/delays.c            \
 drivers/stm32f4xx/adc1.c              \
 drivers/stm32f4xx/lcd.c               \
-drivers/stm32f4xx/rtc.c
+drivers/stm32f4xx/rtc.c               \
+drivers/md380/pll.c
 endif
 
 ##
