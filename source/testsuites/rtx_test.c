@@ -31,98 +31,12 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "stm32f4xx.h"
-#include "rtc.h"
 #include "gpio.h"
 #include "adc1.h"
 #include "delays.h"
-#include <math.h>
+#include "pll.h"
 
-#define REF_CLK 16800000.0F  // Reference clock: 16.8MHz
-#define PHD_GAIN 0x1F        // Phase detector gain: hex value, max 0x1F
-#define REFCLK_DIV 5         // Reference clock divider
 #define IF_FREQ 49950000.0F  // Intermediate frequency: 49.95MHz
-
-#define OFFSET 10000.0F      // Roughly 10kHz of offset
-
-void spiSend(uint16_t value)
-{
-    uint16_t temp = value;
-
-    // PLL data is PE5, PLL clock is PE4
-    for(uint8_t i = 0; i < 16; i++)
-    {
-        gpio_setPin(GPIOE, 4);
-        delayUs(1);
-        if(temp & 0x8000)
-            gpio_setPin(GPIOE, 5);
-        else
-            gpio_clearPin(GPIOE, 5);
-        temp <<= 1;
-        delayUs(1);
-        gpio_clearPin(GPIOE, 4);
-        delayUs(1);
-    }
-
-    gpio_setPin(GPIOE, 4);
-}
-
-void configurePll(float fvco, uint8_t clkDiv)
-{
-    float freq = fvco - IF_FREQ;
-    float K = freq/(REF_CLK/((float) clkDiv));
-    float Ndiv = floor(K) - 32.0;
-    float Nfrac = round(262144*(K - Ndiv - 32.0));
-
-    uint16_t divider = ((uint16_t) Ndiv);
-    uint32_t nf = ((uint32_t) Nfrac);
-    uint16_t divMsb = nf >> 8;
-    uint16_t divLsb = nf & 0x00FF;
-
-    printf("Configuring PLL.\r\n- Fvco %.2f\r\n- Divider %x\r\n- Frac %x\r\n",
-           fvco, divider, nf);
-
-    /* Divider register */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(divider);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-
-    /* Dividend LSB register */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x2000 | divLsb);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-
-    /* Dividend MSB register */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x1000 | divMsb);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-
-    /* Reference frequency divider */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x5000 | ((uint16_t)clkDiv - 1));
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-}
-
-void configurePdGain(uint8_t gain)
-{
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x6000 | ((uint16_t) gain));
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-}
 
 void task(void *arg)
 {
@@ -173,58 +87,26 @@ void task(void *arg)
     gpio_setMode(GPIOE, 13, OUTPUT);    // Unmute path from AF_out to speaker
     gpio_setPin(GPIOE, 13);
 
-
-    gpio_setMode(GPIOE, 4, OUTPUT);     // PLL clock
-    gpio_setMode(GPIOE, 5, OUTPUT);     // PLL data
-    gpio_setMode(GPIOD, 11, OUTPUT);    // PLL cs
-    gpio_setPin(GPIOD, 11);
-    gpio_setMode(GPIOD, 10, INPUT);     // PLL lock
-
     gpio_setMode(GPIOE, 0, OUTPUT);     // LED
 
-    configurePdGain(0x1F);
-
-    /* Power down/multiplexer control register */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x73D0);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-
-    /* Modulation control */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x8000);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-
-    /* Modulation control */
-    gpio_clearPin(GPIOD, 11);
-    delayUs(10);
-    spiSend(0x9000);
-    delayUs(10);
-    gpio_setPin(GPIOD, 11);
-    delayMs(1);
-
     adc1_init();
+    pll_init();
 
     gpio_setMode(GPIOA, 4, INPUT_ANALOG);   // DAC requires analog connection
     gpio_setMode(GPIOA, 5, INPUT_ANALOG);
 
     RCC->APB1ENR |= RCC_APB1ENR_DACEN;
     DAC->CR = DAC_CR_EN2 | DAC_CR_EN1;
-    DAC->DHR12R2 = 0x3e8;                   // 0V to MOD2_BIAS
-    DAC->DHR12R1 = 0x956;                   // APC/TV voltage
+    DAC->DHR12R2 = 0x3e8;               // 0V to MOD2_BIAS
+    DAC->DHR12R1 = 0x956;               // APC/TV voltage
 
-    configurePll(430100000, REFCLK_DIV);    // 430.100MHz
-    gpio_setPin(GPIOC, 9);                  // Turn on RX front-end power supply
+    pll_setFrequency(430100000 - IF_FREQ, 5);     // 430.100MHz
+    gpio_setPin(GPIOC, 9);              // Turn on RX front-end power supply
 
     while(1)
     {
         gpio_togglePin(GPIOE, 0);
-        if(gpio_readPin(GPIOD, 10) == 1) puts("PLL LOCK!\r");
+        if(pll_locked()) puts("PLL LOCK!\r");
         printf("RSSI %.3f\r\n", adc1_getMeasurement(1));
         delayMs(5000);
     }

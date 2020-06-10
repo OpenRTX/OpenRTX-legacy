@@ -90,7 +90,6 @@ void pll_setFrequency(float freq, uint8_t clkDiv)
     float Ndiv = floor(K) - 32.0;
     float Ndnd = round(262144*(K - Ndiv - 32.0));
 
-    uint16_t divider = ((uint16_t) Ndiv);
     uint32_t dnd = ((uint32_t) Ndnd);
     uint16_t dndMsb = dnd >> 8;
     uint16_t dndLsb = dnd & 0x00FF;
@@ -112,6 +111,6 @@ bool pll_spiInUse()
      * If PLL chip select is low, SPI is being used by this driver.
      * We can check it by reading the GPIOD ODR.
      */
-    return (GPIOD->ODR & (1 << 11)) ? true : false;
+    return (GPIOD->ODR & (1 << 11)) ? false : true;
 }
 
