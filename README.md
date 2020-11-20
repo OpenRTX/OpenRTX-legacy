@@ -1,35 +1,8 @@
-# OpenDMR
-## Open source firmware for the TYT MD380
+# OpenRTX-legacy
 
-This firmware is *highly experimental* and is not in a usable state right now,
-however contributions and testing are welcome and accepted.
+This repository contains the code written during the initial phase of the OpenRTX project - at that time named "OpenDMR" - from March to June 2020.
 
-## Installation
-
-To build and install the firmware, first clone this repository:
-
-```
-git clone https://github.com/n1zzo/OpenDMR
-```
-
-To build the firmware you need to have a toolchain for the ARM ISA installed
-on you system, you can install one using your package manager.
-You can then proceed in building the firmware:
-
-```
-cd OpenDMR
-make
-```
-
-If everithing compiled without errors you can connect your radio via USB,
-put it in recovery mode (by powering it on with the PTT and the button
-above it pressed), and flash the firmware:
-
-```
-make flash
-```
-
-Now you can power cycle your radio and enjoy the new breath of freedom!
+**The codebase has been reorganised and moved to https://github.com/OpenRTX/OpenRTX, where is currently under active development.**
 
 ## License
 
